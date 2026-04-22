@@ -1,0 +1,6 @@
+discord.py==2.7.1
+matplotlib==3.10.8
+numpy==2.4.4
+pillow==12.1.1
+python-dotenv==1.2.2
+requests==2.33.0
