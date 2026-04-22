@@ -230,13 +230,15 @@ def _generate_hp_tracker_embed(
 ) -> tuple[discord.Embed, discord.File]:
     enemies_dict = {}
     for enemy in actifs:
-        enemy_name = enemy.name + f" #{enemy.instance_id.split('_')[-1]}" if enemy.instance_id else enemy.name
+        marker = enemy.marker or "?"
+        enemy_name = f"[{marker}] {enemy.name}" if not enemy.boss else enemy.name
         enemies_dict[enemy_name] = {
             "position": enemy.position if enemy.position is not None else (0, -4),
             "id": enemy.instance_id if enemy.instance_id else "N/A",
             "hp_current": enemy.current_hp,
             "hp_max": enemy.max_hp,
             "boss": enemy.boss,
+            "label": marker,
         }
 
     filename = draw_combat(enemies_dict, player_positions, dead_enemies=dead_enemies)

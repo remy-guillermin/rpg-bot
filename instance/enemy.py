@@ -27,6 +27,7 @@ class Enemy:
 
         self.damage_log: dict[str, int] = {}
         self.position: tuple[int, int] | None = None
+        self.marker: str = ""
 
     # ── Combat ──────────────────────────────────────────────
 
@@ -119,11 +120,15 @@ class EnemyRepository:
     #              POS1   POS2    POS3    POS4    POS5   POS6   POS7    POS8    POS9    POS10   POS11    POS12    POS13    POS14
     ENEMY_SLOTS = [(0,0), (-1,0), (0,-1), (1,-1), (1,0), (2,0), (2,-1), (2,-2), (1,-2), (0,-2), (-1,-2), (-2,-2), (-2,-1), (-2,0)]
 
-    def spawn(self, enemy_id: str, count: int = 1, players: list[str] = None) -> list[Enemy]:
+    def spawn(self, enemy_id: str, count: int = 1, players: list[str] = None, extra_occupied: set[tuple[int, int]] | None = None) -> list[Enemy]:
         if enemy_id not in self._catalog:
             raise ValueError(f"Ennemi '{enemy_id}' introuvable dans le catalogue.")
         occupied = {e.position for e in self._active.values() if e.position is not None}
+        if extra_occupied:
+            occupied |= extra_occupied
         free_slots = [s for s in self.ENEMY_SLOTS if s not in occupied]
+        used_markers = {e.marker for e in self._active.values() if e.marker}
+        free_markers = [chr(ord('A') + i) for i in range(26) if chr(ord('A') + i) not in used_markers]
         spawned = []
         for i in range(count):
             self._counters[enemy_id] = self._counters.get(enemy_id, 0) + 1
@@ -131,6 +136,7 @@ class EnemyRepository:
             enemy = Enemy(self._catalog[enemy_id], iid)
             enemy.damage_log = {player: 0 for player in (players or [])}
             enemy.position = free_slots[i] if i < len(free_slots) else (0, -4)
+            enemy.marker = free_markers[i] if i < len(free_markers) else "?"
             occupied.add(enemy.position)
             self._active[iid] = enemy
             spawned.append(enemy)

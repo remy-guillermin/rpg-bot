@@ -5,12 +5,16 @@ import random
 import numpy as np
 from itertools import groupby
 
-from utils.utils import PLAYER_COLORS
+from utils.utils import PLAYER_COLORS, PLAYER_INITIALS
 
 BOSS_COLOR   = '#6A1B9A'
 ENEMY_COLOR  = '#C62828'
 PLAYER_COLOR = '#1565C0'
 
+def _is_light_color(hex_color: str) -> bool:
+    r, g, b = ImageColor.getrgb(hex_color)
+    luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+    return luminance > 0.5
 
 W, H = 2400, 1800
 
@@ -196,7 +200,7 @@ def draw_glow(overlay, x, y, radius, color_hex, intensity=120, blur_radius=20):
     glow_layer = glow_layer.filter(ImageFilter.GaussianBlur(radius=blur_radius))
     overlay.alpha_composite(glow_layer)
 
-def draw_enemy(draw, overlay, x, y, hp_current, hp_max, enemy_name="", is_boss=False):
+def draw_enemy(draw, overlay, x, y, hp_current, hp_max, enemy_name="", is_boss=False, label="?"):
     color = BOSS_COLOR if is_boss else ENEMY_COLOR
     radius = 35 if is_boss else 15
 
@@ -208,7 +212,7 @@ def draw_enemy(draw, overlay, x, y, hp_current, hp_max, enemy_name="", is_boss=F
     font = ImageFont.truetype('/System/Library/Fonts/SFNS.ttf', size=24)
 
     if not is_boss:
-        draw.text((x,y), enemy_name[-1], fill='white', anchor='mm', font=font)
+        draw.text((x, y), label, fill='white', anchor='mm', font=font)
 
     # Barre de vie
     hp_ratio = hp_current / hp_max if hp_max > 0 else 0
@@ -233,6 +237,10 @@ def draw_player(draw, x, y, player_name, outline='#000000'):
     radius = 25
     color = PLAYER_COLORS.get(player_name, PLAYER_COLOR)
     draw.circle((x, y), radius, fill=color, outline=outline, width=3)
+    initials = PLAYER_INITIALS.get(player_name, player_name[:2].upper())
+    font = ImageFont.truetype('/System/Library/Fonts/SFNS.ttf', size=16)
+    text_color = '#000000' if _is_light_color(color) else '#FFFFFF'
+    draw.text((x, y), initials, fill=text_color, anchor='mm', font=font)
 
 
 # Mapping : q → lettre, r → chiffre
@@ -322,7 +330,7 @@ def draw_combat(enemies, players, dead_enemies=None, room_type='cavern'):
 
     for enemy_name, enemy in enemies.items():
         ex, ey = hex_to_pixel(*enemy['position'], hex_size=45, cx=cx, cy=cy)
-        draw_enemy(draw, overlay, ex, ey, enemy['hp_current'], enemy['hp_max'], enemy_name=enemy_name, is_boss=enemy['boss'])
+        draw_enemy(draw, overlay, ex, ey, enemy['hp_current'], enemy['hp_max'], enemy_name=enemy_name, is_boss=enemy['boss'], label=enemy.get('label', '?'))
 
     for player_name, (px, py) in players.items():
         px, py = hex_to_pixel(px, py, hex_size=45, cx=cx, cy=cy)

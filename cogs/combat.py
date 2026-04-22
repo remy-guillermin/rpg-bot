@@ -130,7 +130,9 @@ class Combat(commands.Cog):
         if channel is None:
             return
         try:
-            instances = self.enemy_repository.spawn(enemy_id, count, self.bot.character_repository.players)
+            extra_occupied = set(self.combat.player_positions.values())
+            extra_occupied |= {d["position"] for d in self.combat.dead_enemies if d.get("position")}
+            instances = self.enemy_repository.spawn(enemy_id, count, self.bot.character_repository.players, extra_occupied=extra_occupied)
         except ValueError as e:
             await interaction.response.send_message(str(e), ephemeral=False)
             return

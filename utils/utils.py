@@ -227,6 +227,17 @@ PLAYER_COLORS = {
     'Marine'    :  '#F06292',  # rose
 }
 
+PLAYER_INITIALS = {
+    'Achille'   : 'AC',
+    'Altaïr'    : 'AI',
+    'Jules'     : 'JL',
+    'Justin'    : 'JS',
+    'Léa'       : 'LÉ',
+    'Louanne'   : 'LN',
+    'Louise'    : 'LI',
+    'Marine'    : 'MA',
+}
+
 RUNES_COST = {
     "rare": 25,
     "epic": 55,
