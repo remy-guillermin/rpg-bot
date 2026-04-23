@@ -258,10 +258,23 @@ def chess_to_hex(notation: str) -> tuple[int, int]:
     row = int(notation[1:]) - 1
     return (col - 11, row - 11)
 
+_BIOME_PALETTE = {
+    'cavern':   {'bg': '#CCBBA3', 'floor': '#EBE3D3', 'outline': '#000000', 'label': '#7A6A58', 'hex': '#8A7A68'},
+    'dungeon':  {'bg': '#2A2A2E', 'floor': '#4A4A52', 'outline': '#0A0A0C', 'label': '#6A6A72', 'hex': '#3A3A42'},
+    'forest':   {'bg': '#1E3231', 'floor': '#9CB285', 'outline': '#010206', 'label': '#3A5030', 'hex': '#4A6840'},
+    'lake':     {'bg': '#1A2E3A', 'floor': '#4A8FAA', 'outline': '#060A10', 'label': '#2A5A6A', 'hex': '#3A7090'},
+    'magic':    {'bg': '#1E1030', 'floor': '#6A4A9A', 'outline': '#060008', 'label': '#5A3A7A', 'hex': '#4A2A7A'},
+    'mountain': {'bg': '#2A2218', 'floor': '#8A7A60', 'outline': '#0A0806', 'label': '#5A4A38', 'hex': '#6A5A48'},
+    'poison':   {'bg': '#1A2810', 'floor': '#7A9A20', 'outline': '#040800', 'label': '#4A6010', 'hex': '#5A7818'},
+    'sea':      {'bg': '#0A1828', 'floor': '#2A6080', 'outline': '#020608', 'label': '#1A4060', 'hex': '#1A5070'},
+}
+
 def draw_combat(enemies, players, dead_enemies=None, room_type='cavern'):
-    BG_COLOR     = '#CCBBA3' if room_type == 'cavern' else '#1E3231'
-    FLOOR_COLOR  = '#EBE3D3' if room_type == 'cavern' else '#9CB285'
-    OUTLINE      = '#000000' if room_type == 'cavern' else '#010206'
+    palette     = _BIOME_PALETTE.get(room_type, _BIOME_PALETTE['cavern'])
+    BG_COLOR    = palette['bg']
+    FLOOR_COLOR = palette['floor']
+    OUTLINE     = palette['outline']
+    HEX_COLOR   = palette['hex']
 
     img  = Image.new('RGBA', (W, H), color=BG_COLOR)
     draw = ImageDraw.Draw(img)
@@ -306,7 +319,7 @@ def draw_combat(enemies, players, dead_enemies=None, room_type='cavern'):
         
     draw.polygon(floor_pts, fill=FLOOR_COLOR)
 
-    hex_centers = draw_hex_grid(draw, cx, cy, floor_arr, hex_size=45, color='#8A7A68')
+    hex_centers = draw_hex_grid(draw, cx, cy, floor_arr, hex_size=45, color=HEX_COLOR)
 
     # ─── Labels de coordonnées sur les cases libres ───────────────────────────────
     occupied_positions = set()
@@ -319,7 +332,7 @@ def draw_combat(enemies, players, dead_enemies=None, room_type='cavern'):
             occupied_positions.add(dead['position'])
 
     label_font = ImageFont.truetype('/System/Library/Fonts/SFNS.ttf', size=14)
-    label_color = '#7A6A58' if room_type == 'cavern' else '#3A5030'
+    label_color = palette['label']
     for q in range(-10, 11):
         for r in range(-10, 11):
             if (q, r) in occupied_positions:

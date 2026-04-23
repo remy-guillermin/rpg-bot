@@ -227,6 +227,7 @@ def _generate_hp_tracker_embed(
     actifs: list,
     player_positions: dict[str, tuple[int, int]],
     dead_enemies: list[dict],
+    room_type: str = 'cavern',
 ) -> tuple[discord.Embed, discord.File]:
     enemies_dict = {}
     for enemy in actifs:
@@ -241,7 +242,7 @@ def _generate_hp_tracker_embed(
             "label": marker,
         }
 
-    filename = draw_combat(enemies_dict, player_positions, dead_enemies=dead_enemies)
+    filename = draw_combat(enemies_dict, player_positions, dead_enemies=dead_enemies, room_type=room_type)
     filepath = os.path.join("data", "combat_images", filename)
 
     embed = discord.Embed(

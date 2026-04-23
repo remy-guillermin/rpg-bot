@@ -89,6 +89,7 @@ class EnemyRepository:
         self._active:   dict[str, Enemy] = {}  # instance_id → Enemy vivant
         self._counters: dict[str, int]   = {}  # enemy_id  → nb total spawnés
         self.tracker_message: discord.Message | None = None
+        self.room_type: str | None = None
         self.reload()
 
 
@@ -96,8 +97,9 @@ class EnemyRepository:
         self._catalog.clear()
         self._active.clear()
         self._counters.clear()
+        self.room_type = None
         enemies_as_dicts = load_enemies(GSHEET_ENEMIES)
-        self.load_catalog(enemies_as_dicts) 
+        self.load_catalog(enemies_as_dicts)
         return len(self._catalog)
 
     # ── Catalogue ────────────────────────────────────────────
@@ -137,6 +139,8 @@ class EnemyRepository:
             enemy.damage_log = {player: 0 for player in (players or [])}
             enemy.position = free_slots[i] if i < len(free_slots) else (0, -4)
             enemy.marker = free_markers[i] if i < len(free_markers) else "?"
+            if self.room_type is None:
+                self.room_type = enemy.biome
             occupied.add(enemy.position)
             self._active[iid] = enemy
             spawned.append(enemy)

@@ -88,6 +88,7 @@ class Combat(commands.Cog):
 
             if not actifs:
                 rewards = self.combat.collect_rewards()
+                self.enemy_repository.room_type = None
                 if rewards["xp"]:
                     for char_name, xp in rewards["xp"].items():
                         fighter = self.bot.character_repository.get_character_by_name(char_name)
@@ -109,6 +110,7 @@ class Combat(commands.Cog):
                 actifs,
                 self.combat.player_positions,
                 self.combat.dead_enemies,
+                room_type=self.enemy_repository.room_type or 'cavern',
             )
             self.enemy_repository.tracker_message = await channel.send(file=file, embed=embed)
 
@@ -129,12 +131,13 @@ class Combat(commands.Cog):
         channel = await self._get_combat_channel(interaction)
         if channel is None:
             return
+        await interaction.response.defer(ephemeral=True)
         try:
             extra_occupied = set(self.combat.player_positions.values())
             extra_occupied |= {d["position"] for d in self.combat.dead_enemies if d.get("position")}
             instances = self.enemy_repository.spawn(enemy_id, count, self.bot.character_repository.players, extra_occupied=extra_occupied)
         except ValueError as e:
-            await interaction.response.send_message(str(e), ephemeral=False)
+            await interaction.followup.send(str(e), ephemeral=True)
             return
 
         self.combat.start(self.bot.character_repository.players)
@@ -148,6 +151,7 @@ class Combat(commands.Cog):
         await self._refresh_tracker(channel)
 
         await self.bot.history.log_spawn(interaction.guild, instances)
+        await interaction.delete_original_response()
 
     @app_commands.command(name="damage", description="Infliger des dégâts à un ennemi")
     @admin_only()
@@ -159,11 +163,10 @@ class Combat(commands.Cog):
         channel = await self._get_combat_channel(interaction)
         if channel is None:
             return
+        await interaction.response.defer(ephemeral=True)
         enemy = self.enemy_repository.get(instance_id)
         if enemy is None:
-            await interaction.response.send_message(
-                f"Ennemi `{instance_id}` introuvable.", ephemeral=False
-            )
+            await interaction.followup.send(f"Ennemi `{instance_id}` introuvable.", ephemeral=True)
             return
 
         result = enemy.take_damage(valeur)
@@ -179,14 +182,13 @@ class Combat(commands.Cog):
 
         character = self.bot.character_repository.get_character_by_name(character_name)
         if not character:
-            await interaction.response.send_message(
-                f"Personnage `{character_name}` introuvable.", ephemeral=False
-            )
+            await interaction.followup.send(f"Personnage `{character_name}` introuvable.", ephemeral=True)
             return
 
         await self.bot.history.log_damage(interaction.guild, enemy, character, result, enemy_attack=False)
 
         await self._refresh_tracker(channel)
+        await interaction.delete_original_response()
 
     @app_commands.command(name="heal", description="Soigner un ennemi actif")
     @admin_only()
@@ -221,19 +223,16 @@ class Combat(commands.Cog):
         channel = await self._get_combat_channel(interaction)
         if channel is None:
             return
+        await interaction.response.defer(ephemeral=True)
 
         enemy = self.enemy_repository.get(instance_id)
         if enemy is None:
-            await interaction.response.send_message(
-                f"Ennemi `{instance_id}` introuvable.", ephemeral=True
-            )
+            await interaction.followup.send(f"Ennemi `{instance_id}` introuvable.", ephemeral=True)
             return
 
         character = self.bot.character_repository.get_character_by_name(character_name)
         if character is None:
-            await interaction.response.send_message(
-                f"Personnage `{character_name}` introuvable.", ephemeral=True
-            )
+            await interaction.followup.send(f"Personnage `{character_name}` introuvable.", ephemeral=True)
             return
 
         die = 20 if enemy.boss else 5
@@ -267,7 +266,7 @@ class Combat(commands.Cog):
         player_embed = _generate_enemy_attack_embed(enemy, character_name, result)
         await channel.send(embed=player_embed)
 
-        await interaction.response.send_message("✅", ephemeral=True)
+        await interaction.delete_original_response()
 
     @app_commands.command(name="kill", description="Tuer un ennemi actif")
     @admin_only()
