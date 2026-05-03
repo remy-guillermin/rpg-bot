@@ -129,7 +129,7 @@ EMOJI_BY_TAG = {
     "Rune": "߷",
 }
 
-ENCHANT_THRESHOLDS = {"rare": 35, "epic": 65}
+ENCHANT_THRESHOLDS = {"uncommon": 35, "rare": 50, "epic": 65}
 ENCHANT_COOLDOWN_MINUTES = 10
 
 UPGRADE_EQUIPMENT: list[dict[str, str]] = [

@@ -311,7 +311,8 @@ class LootBoxOpenedView(View):
         super().__init__(timeout=120)
         self.lootbox = lootbox
         self.rewards = rewards
-        self.unique_items = list({item for item, qty in rewards})
+        seen = set()
+        self.unique_items = [item for item, qty in rewards if not (item.name in seen or seen.add(item.name))]
         for i, item in enumerate(sorted(self.unique_items, key=lambda p: p.name)):
             button = LootBoxRewardButton(item, index=i)
             self.add_item(button)
