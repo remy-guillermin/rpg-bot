@@ -303,7 +303,7 @@ def make_enchantable_entry_autocomplete(character_repository):
     return enchantable_entry_autocomplete
 
 def make_rune_autocomplete(character_repository):
-    """Autocomplete for rune items in the player's inventory (only rare/epic — others require a master blacksmith)."""
+    """Autocomplete for rune items in the player's inventory (only uncommon/rare/epic — others require a master blacksmith)."""
     async def rune_autocomplete(
         interaction: Interaction,
         current: str
@@ -316,7 +316,7 @@ def make_rune_autocomplete(character_repository):
             app_commands.Choice(name=entry.item.name, value=entry.item.name)
             for entry in character.inventory.entries
             if "rune" in entry.item.tags
-            and entry.item.rarity in ("rare", "epic")
+            and entry.item.rarity in ("uncommon", "rare", "epic")
             and _word_startswith(entry.item.name, current)
         ], key=lambda c: _accent_sort_key(c.name))[:25]
     return rune_autocomplete

@@ -552,7 +552,7 @@ class Items(commands.Cog):
             await interaction.response.send_message(embed=_generate_player_error_embed(f"Rune '{rune_name}' introuvable."), ephemeral=False)
             return
 
-        if rune_item.rarity not in ("rare", "epic"):
+        if rune_item.rarity not in ENCHANT_THRESHOLDS:
             await interaction.response.send_message(embed=_generate_player_error_embed(f"Les runes de rareté **{rune_item.rarity}** ne peuvent être enchâssées que par un maître forgeron."), ephemeral=False)
             return
 
