@@ -102,7 +102,7 @@ class BuffRepository():
             expired = []
             for buff in self.get_buffs_by_character(character_name):
                 buff.duration -= 1
-                if buff.duration <= 0:
+                if buff.duration < 0:
                     expired.append(buff)
             for buff in expired:
                 self.buffs.remove(buff)

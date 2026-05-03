@@ -54,7 +54,7 @@ class Crafts(commands.Cog):
             await interaction.response.send_message(embed=embed, ephemeral=False)
             return
 
-        logger.debug(f"Craftable crafts for {character}: {self.bot.craft_repository.find_craftable_craft(character)}")
+        logger.debug(f"Craftable crafts for {character}: {self.bot.craft_repository.find_craftable_crafts(character)}")
             
         craftable_quantities = self.bot.craft_repository.find_craftable_quantities(character)
         crafts = self.bot.craft_repository.get_visible_crafts()
