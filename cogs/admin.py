@@ -5,7 +5,7 @@ from discord import app_commands, Interaction
 from utils.utils import _send_embed, update_bot_status
 from utils.admin import handle_admin_permission_error, admin_only, AdminGroup
 from utils.autocomplete import make_character_autocomplete, make_realm_autocomplete, make_city_autocomplete
-from utils.path import PLAYER_VOICE_CHANNELS, GENERAL_CHANNEL_NAME
+from utils.path import PLAYER_VOICE_CHANNELS, GENERAL_CHANNEL_NAME, GM_NAMES
 from utils.builder_embed import _generate_city_arrival_embed
 
 class Admin(commands.Cog):
@@ -83,7 +83,7 @@ class Admin(commands.Cog):
                     continue
                 for member in channel.members:
                     char = self.bot.character_repository.get_character_by_user_id(member.id)
-                    if char and char.name not in self.bot.character_repository.players and char.name != "Rémy":
+                    if char and char.name not in self.bot.character_repository.players and char.name not in GM_NAMES:
                         self.bot.character_repository.players.append(char.name)
                         added.append(f"✅ **{char.name}** ({channel.name})")
 
@@ -282,7 +282,7 @@ class Admin(commands.Cog):
                     continue
                 for member in channel.members:
                     char = self.bot.character_repository.get_character_by_user_id(member.id)
-                    if char and char.name not in self.bot.character_repository.players and char.name != "Rémy":
+                    if char and char.name not in self.bot.character_repository.players and char.name not in GM_NAMES:
                         self.bot.character_repository.players.append(char.name)
         await update_bot_status(self.bot)
 

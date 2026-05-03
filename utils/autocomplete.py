@@ -692,14 +692,18 @@ def make_sale_id_autocomplete(npc_repository, trade_repository):
     return sale_id_autocomplete
 
 def make_accept_quest_autocomplete(npc_repository, quest_progress, bot):
-    """Autocomplete for quests available to start in the current city."""
+    """Autocomplete for quests available to start at the current location."""
     async def accept_quest_autocomplete(
         interaction: Interaction,
         current: str
     ) -> list[app_commands.Choice[str]]:
         completed = quest_progress.get_completed()
         choices = []
-        for npc in npc_repository.by_city(bot.location.city):
+        if bot.location.city:
+            npcs = npc_repository.by_city(bot.location.city)
+        else:
+            npcs = npc_repository.by_realm_outside_city(bot.location.realm)
+        for npc in npcs:
             for quest in npc.visible_quests(completed):
                 status = quest_progress.get_status(quest.quest_id)
                 if status is None:
