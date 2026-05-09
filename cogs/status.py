@@ -81,6 +81,23 @@ class Status(commands.Cog):
 
 
     
+    async def reset_character(self, interaction: Interaction, character_name: str):
+        """Remet les HP, mana et stamina d'un personnage à leur maximum."""
+        character = self.bot.character_repository.get_character_by_name(character_name)
+        if not character:
+            await interaction.response.send_message(embed=_generate_player_error_embed(f"Personnage '{character_name}' introuvable."), ephemeral=True)
+            return
+        self.bot.character_repository.reset_resources(character)
+        await interaction.response.send_message(f"✅ {character_name} restauré au maximum (HP / Mana / Stamina).", ephemeral=True)
+
+    async def reset_all(self, interaction: Interaction):
+        """Remet les HP, mana et stamina de tous les personnages à leur maximum."""
+        await interaction.response.defer(ephemeral=True)
+        characters = self.bot.character_repository.get_all_characters()
+        for character in characters:
+            self.bot.character_repository.reset_resources(character)
+        await interaction.followup.send(f"✅ {len(characters)} personnage(s) restaurés au maximum (HP / Mana / Stamina).", ephemeral=True)
+
     async def cog_load(self):
         # --- add experience ---
         add_exp_cmd = app_commands.Command(
@@ -117,6 +134,22 @@ class Status(commands.Cog):
         )
         add_boss_kill_cmd.autocomplete("character_name")(self.character_autocomplete)
         self.status_group.add_command(add_boss_kill_cmd)
+
+        # --- reset ---
+        reset_cmd = app_commands.Command(
+            name="reset",
+            description="Remet les HP, mana et stamina d'un personnage à leur maximum.",
+            callback=self.reset_character,
+        )
+        reset_cmd.autocomplete("character_name")(self.character_autocomplete)
+        self.status_group.add_command(reset_cmd)
+
+        # --- reset-all ---
+        self.status_group.add_command(app_commands.Command(
+            name="reset-all",
+            description="Remet les HP, mana et stamina de tous les personnages à leur maximum.",
+            callback=self.reset_all,
+        ))
 
 
 async def setup(bot: commands.Bot):

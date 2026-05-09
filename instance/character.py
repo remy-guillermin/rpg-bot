@@ -279,3 +279,9 @@ class CharacterRepository:
         character.resources['mana'] = new_mana
         character.resources['stamina'] = new_stamina
         self.update_character(character)
+
+    def reset_resources(self, character: Character):
+        for resource in ("hp", "mana", "stamina"):
+            base, level_bonus, item_bonus = _get_resource_max_bonus(resource, character)
+            character.resources[resource] = base + level_bonus + item_bonus
+        self.update_character(character)
