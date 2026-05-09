@@ -178,7 +178,7 @@ def _generate_inventory_embed(character: "Character", my_command: bool = True) -
     for slot in slots_to_show:
         item = equipment[slot]
         if item:
-            bonus_parts = [f"{STATS_CLEAN.get(k, k)} +{v}" for k, v in item.equipped_bonus.items() if v]
+            bonus_parts = [f"{STATS_CLEAN.get(k, k)} {v:+d}" for k, v in item.equipped_bonus.items() if v]
             bonus_str = f"  *({', '.join(bonus_parts)})*" if bonus_parts else ""
             equipment_lines.append(f"**{slot}**: {item.name}{bonus_str}")
         else:

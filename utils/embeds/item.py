@@ -71,7 +71,7 @@ def _generate_item_embed(item: "Item", entry: "Optional[InventoryEntry]" = None,
 
     if item.equippable:
         embed.add_field(name="🛡️ Équipable", value=f"{SLOTS_CLEAN.get(slot_clean, slot_clean)}" if item.equippable else "Non", inline=True)
-        bonus_display = "\n".join(f"- {STATS_CLEAN.get(stat, stat)}: +{bonus}" for stat, bonus in item.equipped_bonus.items()) if item.equipped_bonus else "Aucun"
+        bonus_display = "\n".join(f"- {STATS_CLEAN.get(stat, stat)}: {bonus:+d}" for stat, bonus in item.equipped_bonus.items()) if item.equipped_bonus else "Aucun"
         embed.add_field(name=f"⚔️ Bonus équipé{'s' if len(item.equipped_bonus) > 1 else ''}", value=bonus_display, inline=True)
         if item.rune_slots > 0:
             if entry is not None:
@@ -79,7 +79,7 @@ def _generate_item_embed(item: "Item", entry: "Optional[InventoryEntry]" = None,
                 if entry.runes:
                     rune_lines = "\n".join(
                         f"• **{rune.name}** — " + (
-                            "\n".join(f"{STATS_CLEAN.get(s, s)}: +{b}" for s, b in rune.equipped_bonus.items()) or "aucun bonus"
+                            "\n".join(f"{STATS_CLEAN.get(s, s)}: {b:+d}" for s, b in rune.equipped_bonus.items()) or "aucun bonus"
                         )
                         for rune in entry.runes
                     )
@@ -94,7 +94,7 @@ def _generate_item_embed(item: "Item", entry: "Optional[InventoryEntry]" = None,
                 embed.add_field(name=f"💎 Slots de rune", value=str(item.rune_slots), inline=False)
 
     if item.is_rune:
-        embed.add_field(name="💎 Bonus", value="\n".join(f"- {STATS_CLEAN.get(stat, stat)}: +{bonus}" for stat, bonus in item.equipped_bonus.items()), inline=False)
+        embed.add_field(name="💎 Bonus", value="\n".join(f"- {STATS_CLEAN.get(stat, stat)}: {bonus:+d}" for stat, bonus in item.equipped_bonus.items()), inline=False)
     
 
     if ingredient_for and len(ingredient_for) > 0:

@@ -319,7 +319,7 @@ def _generate_trade_result_embed(
 
 def _generate_blacksmith_enchant_embed(npc_name: str, rune: "Item", item_entry: "InventoryEntry", cost: int) -> discord.Embed:
     bonus_lines = "\n".join(
-        f"• {STATS_CLEAN.get(s, s)}: +{b}" for s, b in rune.equipped_bonus.items()
+        f"• {STATS_CLEAN.get(s, s)}: {b:+d}" for s, b in rune.equipped_bonus.items()
     ) or "Aucun bonus"
     slots_now = len(item_entry.runes)
     embed = discord.Embed(
