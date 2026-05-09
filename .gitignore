@@ -1,6 +1,9 @@
 # Environment
 .env
 
+# Scripts locaux
+run.sh
+
 # Virtual environment
 .venv/
 venv/

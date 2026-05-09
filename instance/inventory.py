@@ -109,6 +109,8 @@ class Inventory:
     async def add(self, guild: discord.Guild, character: "Character", item: "Item", quantity: int = 1, trade: bool = False, craft: bool = False, loot: bool = False, quest: bool = False) -> bool:
         if self.is_full():
             return False
+        if item.unique and self.get_entry(item.name):
+            return False
 
         if item.equippable:
             # Each equippable instance is a distinct entry
@@ -176,19 +178,19 @@ class Inventory:
             )
         return True
 
-    async def use(self, guild: discord.Guild, item_name: str, character: "Character") -> (bool, list[dict]):
+    async def use(self, guild: discord.Guild, item_name: str, character: "Character") -> tuple[bool, list[dict]]:
         entry = self.get_entry(item_name)
-        buff_dict = [{}]
+        buff_dict = []
         if not entry or entry.quantity == 0:
             return False, buff_dict
         if not entry.item.useable:
             return False, buff_dict
         if entry.item.tags == ["relique"]:
-            return True, {
+            return True, [{
                 "name": entry.item.use_title,
                 "description": entry.item.use_description,
                 "source": f"Relique: {entry.item.name}"
-            }
+            }]
         entry.quantity -= 1
         if entry.quantity == 0:
             del self._entries[entry.entry_id]
@@ -235,7 +237,9 @@ class Inventory:
                         e.equipped_quantity = 0
                 elif any(e.item.equippable_slot == "arme_deux_mains" for e in equipped_weapons):
                     for e in equipped_weapons:
-                        e.equipped_quantity = 0
+                        if e.item.equippable_slot == "arme_deux_mains":
+                            e.equipped_quantity = 0
+                            break
 
             if total_equipped >= MAX_WEAPONS:
                 for e in equipped_weapons:
