@@ -2,58 +2,35 @@ import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
 
-import os
-
 from utils.admin import AdminGroup
-from utils.path import COGS_DIR, COGS
+
+_SIMPLE_RELOADS = [
+    ("items",      "item_repository",      "{n} items rechargés.",       "Recharge les items."),
+    ("characters", "character_repository", "{n} personnages rechargés.", "Recharge les personnages."),
+    ("craft",      "craft_repository",     "{n} crafts rechargés.",      "Recharge les crafts."),
+    ("powers",     "power_repository",     "{n} pouvoirs rechargés.",    "Recharge les pouvoirs."),
+    ("lootbox",    "lootbox_repository",   "{n} lootboxes rechargées.",  "Recharge les lootboxes."),
+    ("enemy",      "enemy_repository",     "{n} ennemis rechargés.",     "Recharge les ennemis."),
+]
+
 
 class Reload(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.reload_group = AdminGroup(
-            name="reload", 
+            name="reload",
             description="Commandes de rechargement.",
             default_permissions=discord.Permissions(administrator=True)
         )
         bot.tree.add_command(self.reload_group)
 
-    
-    async def reload_items(self, interaction: Interaction):
-        items_count = self.bot.item_repository.reload()
-        await interaction.response.send_message(f"✅ {items_count} items rechargés.", ephemeral=True)
+    def _make_reload_callback(self, repo_attr: str, template: str):
+        async def callback(interaction: Interaction):
+            n = getattr(self.bot, repo_attr).reload()
+            await interaction.response.send_message(f"✅ {template.format(n=n)}", ephemeral=True)
+        return callback
 
-
-    
-    async def reload_characters(self, interaction: Interaction):
-        characters_count = self.bot.character_repository.reload()
-        await interaction.response.send_message(f"✅ {characters_count} personnages rechargés.", ephemeral=True)
-
-    
-
-    async def reload_craft(self, interaction: Interaction):
-        crafts_count = self.bot.craft_repository.reload()
-        await interaction.response.send_message(f"✅ {crafts_count} crafts rechargés.", ephemeral=True)
-
-
-    
-    async def reload_powers(self, interaction: Interaction):
-        powers_count = self.bot.power_repository.reload()
-        await interaction.response.send_message(f"✅ {powers_count} pouvoirs rechargés.", ephemeral=True)
-
-    
-
-    async def reload_lootbox(self, interaction: Interaction):
-        lootboxes_count = self.bot.lootbox_repository.reload()
-        await interaction.response.send_message(f"✅ {lootboxes_count} lootboxes rechargées.", ephemeral=True) 
-
-    
-
-    async def reload_enemy(self, interaction: Interaction):
-        enemies_count = self.bot.enemy_repository.reload()
-        await interaction.response.send_message(f"✅ {enemies_count} ennemis rechargés.", ephemeral=True)
-
-
-    async def reload_npc(self, interaction: Interaction):
+    async def _reload_npc(self, interaction: Interaction):
         await interaction.response.defer(ephemeral=True)
         self.bot.trade_repository.reload()
         npc_count = self.bot.npc_repository.reload()
@@ -64,21 +41,11 @@ class Reload(commands.Cog):
             ephemeral=True
         )
 
-
-    async def reload_all(self, interaction: Interaction):
+    async def _reload_all(self, interaction: Interaction):
         await interaction.response.defer()
-        items_count = self.bot.item_repository.reload()
-        await interaction.followup.send(f"✅ {items_count} items rechargés.", ephemeral=False)
-        characters_count = self.bot.character_repository.reload()
-        await interaction.followup.send(f"✅ {characters_count} personnages rechargés.", ephemeral=False)
-        crafts_count = self.bot.craft_repository.reload()
-        await interaction.followup.send(f"✅ {crafts_count} crafts rechargés.", ephemeral=False)
-        powers_count = self.bot.power_repository.reload()
-        await interaction.followup.send(f"✅ {powers_count} pouvoirs rechargés.", ephemeral=False)
-        lootboxes_count = self.bot.lootbox_repository.reload()
-        await interaction.followup.send(f"✅ {lootboxes_count} lootboxes rechargées.", ephemeral=False)
-        enemies_count = self.bot.enemy_repository.reload()
-        await interaction.followup.send(f"✅ {enemies_count} ennemis rechargés.", ephemeral=False)
+        for _, repo_attr, template, _ in _SIMPLE_RELOADS:
+            n = getattr(self.bot, repo_attr).reload()
+            await interaction.followup.send(f"✅ {template.format(n=n)}", ephemeral=False)
         self.bot.trade_repository.reload()
         npc_count = self.bot.npc_repository.reload()
         quest_count = len(self.bot.npc_repository._quests)
@@ -88,56 +55,23 @@ class Reload(commands.Cog):
             ephemeral=False
         )
 
-
     async def cog_load(self):
-        self.reload_group.add_command(app_commands.Command(
-            name="items",
-            description="Recharge les items.",
-            callback=self.reload_items
-        ))
-
-        self.reload_group.add_command(app_commands.Command(
-            name="characters",
-            description="Recharge les personnages.",
-            callback=self.reload_characters
-        ))
-
-        self.reload_group.add_command(app_commands.Command(
-            name="craft",
-            description="Recharge les crafts.",
-            callback=self.reload_craft
-        ))
-
-        self.reload_group.add_command(app_commands.Command(
-            name="powers",
-            description="Recharge les pouvoirs.",
-            callback=self.reload_powers
-        ))
-
-        self.reload_group.add_command(app_commands.Command(
-            name="lootbox",
-            description="Recharge les lootboxes.",
-            callback=self.reload_lootbox
-        ))
-
-        self.reload_group.add_command(app_commands.Command(
-            name="enemy",
-            description="Recharge les ennemis.",
-            callback=self.reload_enemy
-        ))
-        
+        for name, repo_attr, template, description in _SIMPLE_RELOADS:
+            self.reload_group.add_command(app_commands.Command(
+                name=name,
+                description=description,
+                callback=self._make_reload_callback(repo_attr, template),
+            ))
         self.reload_group.add_command(app_commands.Command(
             name="npc",
             description="Recharge les NPCs, quêtes et trades.",
-            callback=self.reload_npc
+            callback=self._reload_npc,
         ))
-
         self.reload_group.add_command(app_commands.Command(
             name="all",
             description="Recharge tout.",
-            callback=self.reload_all
+            callback=self._reload_all,
         ))
-
 
 
 async def setup(bot: commands.Bot):
