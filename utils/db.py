@@ -144,6 +144,11 @@ def init_db() -> None:
                 realm TEXT NOT NULL DEFAULT '',
                 city  TEXT DEFAULT NULL
             );
+
+            CREATE TABLE IF NOT EXISTS settings (
+                key   TEXT PRIMARY KEY,
+                value TEXT NOT NULL
+            );
         """)
         _migrate_inventories(conn)
         _migrate_discovered_sets(conn)

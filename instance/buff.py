@@ -1,7 +1,10 @@
 import discord
 import json
+import logging
 
 from utils.db import get_connection
+
+logger = logging.getLogger(__name__)
 
 
 class Buff():
@@ -32,8 +35,20 @@ class BuffRepository():
     def __init__(self, history):
         self.buffs = []
         self.history = history
-        self.auto_decrement = True
+        self.auto_decrement = self._load_auto_decrement()
         self.reload()
+
+    def _load_auto_decrement(self) -> bool:
+        with get_connection() as conn:
+            row = conn.execute("SELECT value FROM settings WHERE key = 'auto_decrement'").fetchone()
+            return row["value"] == "1" if row else True
+
+    def _save_auto_decrement(self):
+        with get_connection() as conn:
+            conn.execute(
+                "INSERT INTO settings (key, value) VALUES ('auto_decrement', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+                ("1" if self.auto_decrement else "0",),
+            )
 
     def reload(self):
         self.buffs.clear()
@@ -52,9 +67,11 @@ class BuffRepository():
     
     def toggle_auto_decrement(self):
         self.auto_decrement = not self.auto_decrement
+        self._save_auto_decrement()
 
     def set_auto_decrement(self, active: bool):
         self.auto_decrement = active
+        self._save_auto_decrement()
 
 
     async def add_buff(self, guild: discord.Guild, buff: Buff):
@@ -118,12 +135,15 @@ class BuffRepository():
 
 
     def save(self):
-        with get_connection() as conn:
-            conn.execute("DELETE FROM buffs")
-            conn.executemany(
-                "INSERT INTO buffs (character_name, name, description, duration, effects, source) VALUES (?, ?, ?, ?, ?, ?)",
-                [
-                    (b.character_name, b.name, b.description, b.duration, json.dumps(b.effects), b.source)
-                    for b in self.buffs
-                ],
-            )
+        try:
+            with get_connection() as conn:
+                conn.execute("DELETE FROM buffs")
+                conn.executemany(
+                    "INSERT INTO buffs (character_name, name, description, duration, effects, source) VALUES (?, ?, ?, ?, ?, ?)",
+                    [
+                        (b.character_name, b.name, b.description, b.duration, json.dumps(b.effects), b.source)
+                        for b in self.buffs
+                    ],
+                )
+        except Exception:
+            logger.exception("Échec de la sauvegarde des buffs — état mémoire et DB peuvent être désynchronisés")
