@@ -147,6 +147,11 @@ class Powers(commands.Cog):
                     for name in self.character_repository.players
                     if name != character.name
                 ]
+                targets = [t for t in targets if t is not None]
+                if not targets:
+                    embed = _generate_player_error_embed("Aucune cible disponible — personne d'autre n'est en session.")
+                    await interaction.response.send_message(embed=embed, ephemeral=False)
+                    return
                 view = TargetSelectionView(
                     cog=self,
                     power=power,
