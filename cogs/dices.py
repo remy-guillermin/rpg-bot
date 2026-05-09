@@ -36,6 +36,7 @@ class Dices(commands.Cog):
         await self.buff_repository.decrement_buffs_duration(interaction.guild, character.name)
 
         roll = self.dice_session.roll(dice, character_name=character.name)
+        self.dice_session.increment_turn(character.name)
         embed = _generate_basic_dice_embed(roll)
         await interaction.response.send_message(embed=embed, ephemeral=False)
 
@@ -61,6 +62,7 @@ class Dices(commands.Cog):
         expression = f"1d{faces}+{total_bonus}" if total_bonus > 0 else f"1d{faces}{total_bonus}" if total_bonus < 0 else f"1d{faces}"
 
         roll = self.dice_session.stat_roll(expression, stat_name=stat, character_name=character.name)
+        self.dice_session.increment_turn(character.name)
 
         embed = _generate_stat_dice_embed(character.name, stat, roll, {"base": base_bonus, "level": level_bonus, "item": item_bonus, "buff": buff_bonus, "admin": bonus}, faces)
         await interaction.response.send_message(embed=embed, ephemeral=False)

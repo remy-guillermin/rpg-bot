@@ -92,7 +92,11 @@ class My(commands.Cog):
             await interaction.followup.send(embed=embed)
             return
 
-        embed = _generate_powers_embed(character)
+        cooldowns = {
+            power.name: self.bot.dice_session.get_cooldown_remaining(character.name, power.name)
+            for power in character.powers
+        }
+        embed = _generate_powers_embed(character, cooldowns=cooldowns)
         view = PowersView(character)
         await interaction.followup.send(embed=embed, view=view)
 

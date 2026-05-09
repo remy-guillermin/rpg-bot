@@ -231,7 +231,7 @@ def _generate_inventory_embed(character: "Character", my_command: bool = True) -
     return embed
 
 
-def _generate_powers_embed(character: "Character", my_command: bool = True) -> discord.Embed:
+def _generate_powers_embed(character: "Character", my_command: bool = True, cooldowns: dict[str, int] | None = None) -> discord.Embed:
     """
         Génère un embed Discord contenant les pouvoir d'un joueur.
 
@@ -256,6 +256,10 @@ def _generate_powers_embed(character: "Character", my_command: bool = True) -> d
     if character.powers:
         for power in sorted(character.powers, key=lambda p: locale.strxfrm(p.name)):
             description = power.description if power.description else "Aucune description disponible."
+            cd = cooldowns.get(power.name, 0) if cooldowns else 0
+            if cd > 0:
+                mot = "tour" if cd == 1 else "tours"
+                description += f"\n🔒 *Recharge : **{cd} {mot}** restant{'s' if cd > 1 else ''}*"
             embed.add_field(name=f" ❈ {power.name}", value=description, inline=False)
     else:
         embed.add_field(name="Aucun pouvoir", value="Ce personnage n'a aucun pouvoir pour le moment.", inline=False)

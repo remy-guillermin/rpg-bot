@@ -16,7 +16,7 @@ from utils.variations import (
 from utils.utils import de_du_nom
 
 
-def _generate_power_embed(power: "Power") -> discord.Embed:
+def _generate_power_embed(power: "Power", cooldown_remaining: int = 0) -> discord.Embed:
     """
     Génère un embed Discord contenant le détail d'un pouvoir.
 
@@ -54,6 +54,10 @@ def _generate_power_embed(power: "Power") -> discord.Embed:
 
     if power.dice:
         embed.add_field(name="🎲 Dé", value=power.dice, inline=True)
+
+    if cooldown_remaining > 0:
+        mot = "tour" if cooldown_remaining == 1 else "tours"
+        embed.add_field(name="🔒 Recharge", value=f"**{cooldown_remaining} {mot}** restant{'s' if cooldown_remaining > 1 else ''}", inline=True)
 
     return embed
 

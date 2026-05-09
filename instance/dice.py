@@ -11,6 +11,8 @@ from utils.utils import parse_dice, roll_dice, get_outcome, get_base_outcome, ge
 class DiceSession:
     BASE_DIR = Path("history/dice")
 
+    POWER_COOLDOWN = 3
+
     def __init__(self):
         today = datetime.now().strftime("%Y-%m-%d")
         self._dir = self.BASE_DIR
@@ -27,6 +29,22 @@ class DiceSession:
                 "rolls": [],
             }
             self._save()
+
+        self._turn_counts: dict[str, int] = {}
+        self._power_last_used: dict[str, dict[str, int]] = {}
+
+    def increment_turn(self, character_name: str) -> None:
+        self._turn_counts[character_name] = self._turn_counts.get(character_name, 0) + 1
+
+    def record_power_use(self, character_name: str, power_name: str) -> None:
+        self._power_last_used.setdefault(character_name, {})[power_name] = self._turn_counts.get(character_name, 0)
+
+    def get_cooldown_remaining(self, character_name: str, power_name: str) -> int:
+        last_used = self._power_last_used.get(character_name, {}).get(power_name)
+        if last_used is None:
+            return 0
+        turns_since = self._turn_counts.get(character_name, 0) - last_used
+        return max(0, self.POWER_COOLDOWN - turns_since)
 
     def roll(self, expression: str, roll_type: str = "free", character_name: str | None = None) -> dict:
         result = roll_dice(expression)

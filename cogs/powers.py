@@ -96,7 +96,8 @@ class Powers(commands.Cog):
             await interaction.response.send_message(embed=embed, ephemeral=False)
             return
         
-        embed = _generate_power_embed(power)
+        cooldown_remaining = self.bot.dice_session.get_cooldown_remaining(character.name, power_name)
+        embed = _generate_power_embed(power, cooldown_remaining=cooldown_remaining)
 
         await interaction.response.send_message(embed=embed, ephemeral=False)
 
@@ -122,12 +123,21 @@ class Powers(commands.Cog):
             await interaction.response.send_message(embed=embed, ephemeral=False)
             return
 
+        cooldown_remaining = self.bot.dice_session.get_cooldown_remaining(character.name, power_name)
+        if cooldown_remaining > 0:
+            mot = "tour" if cooldown_remaining == 1 else "tours"
+            embed = _generate_player_error_embed(f"**{power_name}** est en recharge — encore **{cooldown_remaining} {mot}** avant de pouvoir l'utiliser à nouveau.")
+            await interaction.response.send_message(embed=embed, ephemeral=False)
+            return
+
         insufficient = {k: power.cost[k] - character.resources[k] for k in power.cost if character.resources[k] < power.cost[k]}
         if insufficient:
             insufficient_str = ", ".join(f"{k}: {v}" for k, v in insufficient.items())
             embed = _generate_player_error_embed(f"Tu n'as pas assez de ressources pour utiliser ce pouvoir. Ressources manquantes: {insufficient_str}")
             await interaction.response.send_message(embed=embed, ephemeral=False)
             return
+
+        self.bot.dice_session.record_power_use(character.name, power_name)
 
         if power.target_effect:
             needs_selection = any(count == 1 for _, (_, _, count) in power.target_effect.items())
