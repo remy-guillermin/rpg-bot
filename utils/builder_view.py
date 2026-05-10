@@ -13,7 +13,7 @@ from instance.power import Power
 from instance.buff import Buff
 from instance.item import Item
 from instance.lootbox import LootBox
-from instance.trade import TradeProposal
+from instance.trade import TradeProposal, PastTrade
 
 from utils.builder_embed import (
     _generate_power_embed,
@@ -399,6 +399,18 @@ class SaleCounterOfferView(discord.ui.View):
             btn_interaction.guild, self.character.name, self.npc_name,
             self.trade.offered_items, [], self.counter_price,
         )
+
+        self.trade._decrease_quantity()
+        past_trade = PastTrade(
+            trade_id=self.trade.trade_id,
+            item_received_by_player=self.trade.offered_items,
+            item_received_by_merchant=[],
+            currency=self.counter_price,
+            player=self.character.name,
+            timestamp=str(datetime.datetime.now()),
+        )
+        self.bot.trade_repository._append_past_trade(past_trade)
+
         self.stop()
 
         received = " · ".join(f"{e.quantity}x **{e.item.name}**" for e in self.trade.offered_items)
