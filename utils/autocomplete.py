@@ -620,7 +620,7 @@ def make_sale_npc_autocomplete(npc_repository, bot):
         current: str
     ) -> list[app_commands.Choice[str]]:
         def is_seller(npc):
-            return npc.has_role("merchant") or npc.has_role("blacksmith")
+            return npc.has_role("merchant") or npc.has_role("blacksmith") or npc.has_role("black_market_dealer")
         if bot.location.city is not None and bot.location.realm != "":
             npcs = [n for n in npc_repository.by_city(bot.location.city) if is_seller(n)]
         elif bot.location.realm != "":

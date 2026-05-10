@@ -242,7 +242,7 @@ class NPCCog(commands.Cog):
             return
 
         npc = self.npc_repo.get(npc_name)
-        if not npc or (not npc.has_role("merchant") and not npc.has_role("blacksmith")):
+        if not npc or (not npc.has_role("merchant") and not npc.has_role("blacksmith") and not npc.has_role("black_market_dealer")):
             await interaction.response.send_message(
                 embed=_generate_player_error_embed(f"« {npc_name} » n'est pas un marchand ou un forgeron."), ephemeral=True
             )
