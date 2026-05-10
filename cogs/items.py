@@ -78,6 +78,23 @@ class Items(commands.Cog):
     async def character_name_autocomplete(self, interaction: Interaction, current: str):
         return await make_character_autocomplete(self.bot.character_repository)(interaction, current)
 
+    async def target_inventory_autocomplete(self, interaction: Interaction, current: str):
+        target_name = interaction.namespace.target_name
+        character = self.character_repository.get_character_by_name(target_name)
+        if not character:
+            return []
+        seen = set()
+        choices = []
+        for entry in sorted(character.inventory.entries, key=lambda x: x.item.name):
+            name = entry.item.name
+            if name in seen:
+                continue
+            if not current or name.lower().startswith(current.lower()):
+                seen.add(name)
+                qty = character.inventory.get_quantity(name)
+                choices.append(app_commands.Choice(name=f"{name} (x{qty})", value=name))
+        return choices[:25]
+
     async def enchantable_entry_autocomplete(self, interaction: Interaction, current: str):
         return await make_enchantable_entry_autocomplete(self.bot.character_repository)(interaction, current)
 
@@ -167,6 +184,46 @@ class Items(commands.Cog):
             f"**{quantity}× {item.name}** donné à {target.name}.", ephemeral=False
         )
 
+
+    @app_commands.command(name="remove-item", description="Retire un objet de l'inventaire d'un joueur.")
+    @admin_only()
+    @app_commands.describe(
+        target_name="Personnage ciblé.",
+        item_name="Objet à retirer.",
+        quantity="Quantité (défaut : 1).",
+    )
+    @app_commands.autocomplete(
+        target_name=character_name_autocomplete,
+        item_name=target_inventory_autocomplete,
+    )
+    async def remove_item(self, interaction: Interaction, target_name: str, item_name: str, quantity: int = 1):
+        """Retire un objet de l'inventaire d'un joueur."""
+        await interaction.response.defer(ephemeral=True)
+
+        target = self.character_repository.get_character_by_name(target_name)
+        if not target:
+            await interaction.followup.send(embed=_generate_player_error_embed(f"Personnage '{target_name}' introuvable."), ephemeral=True)
+            return
+
+        if quantity < 1:
+            await interaction.followup.send(embed=_generate_player_error_embed("La quantité doit être d'au moins 1."), ephemeral=True)
+            return
+
+        total_qty = target.inventory.get_quantity(item_name)
+        if total_qty < quantity:
+            await interaction.followup.send(
+                embed=_generate_player_error_embed(f"{target_name} n'a que {total_qty}x '{item_name}'."),
+                ephemeral=True,
+            )
+            return
+
+        has_removed = await target.inventory.remove(interaction.guild, target, item_name, quantity)
+        if not has_removed:
+            await interaction.followup.send(embed=_generate_player_error_embed(f"Impossible de retirer '{item_name}'."), ephemeral=True)
+            return
+
+        self.character_repository.update_character(target)
+        await interaction.followup.send(f"✅ **{quantity}× {item_name}** retiré de l'inventaire de {target_name}.", ephemeral=True)
 
     @app_commands.describe(item_name="Le nom de l'objet à afficher.")
     async def item_info(self, interaction: Interaction, item_name: str):
