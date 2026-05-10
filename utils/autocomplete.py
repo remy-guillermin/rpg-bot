@@ -600,12 +600,14 @@ def make_merchant_npc_autocomplete(npc_repository, bot):
         interaction: Interaction,
         current: str
     ) -> list[app_commands.Choice[str]]:
+        def is_buyer(npc):
+            return npc.has_role("merchant") or npc.has_role("black_market_dealer")
         if bot.location.city is not None and bot.location.realm != "":
-            npcs = [n for n in npc_repository.by_city(bot.location.city) if n.has_role("merchant")]
+            npcs = [n for n in npc_repository.by_city(bot.location.city) if is_buyer(n)]
         elif bot.location.realm != "":
-            npcs = [n for n in npc_repository.by_realm_outside_city(bot.location.realm) if n.has_role("merchant")]
+            npcs = [n for n in npc_repository.by_realm_outside_city(bot.location.realm) if is_buyer(n)]
         else:
-            npcs = [n for n in npc_repository.npcs() if n.has_role("merchant")]
+            npcs = [n for n in npc_repository.npcs() if is_buyer(n)]
         return sorted([
             app_commands.Choice(name=f"[{npc.location}] - {npc.name}", value=npc.name)
             for npc in npcs
