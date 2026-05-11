@@ -178,17 +178,28 @@ class NPCCog(commands.Cog):
             await interaction.response.defer()
             item_rewards_lines = []
             for qi in quest.reward_items:
-                candidates = [c for c in active_characters if c.inventory and c.inventory.slots_available() >= qi.quantity]
-                if not candidates:
-                    await interaction.followup.send(
-                        embed=_generate_player_error_embed(
-                            f"Aucun joueur actif n'a assez de place pour recevoir {qi.quantity}x '{qi.item.name}'. Les récompenses ne sont pas distribuées."
-                        ),
-                        ephemeral=False,
-                    )
-                    return
+                if completing_character is not None:
+                    if not completing_character.inventory or completing_character.inventory.slots_available() < qi.quantity:
+                        await interaction.followup.send(
+                            embed=_generate_player_error_embed(
+                                f"{completing_character.name} n'a pas assez de place pour recevoir {qi.quantity}x '{qi.item.name}'."
+                            ),
+                            ephemeral=False,
+                        )
+                        return
+                    recipient = completing_character
+                else:
+                    candidates = [c for c in active_characters if c.inventory and c.inventory.slots_available() >= qi.quantity]
+                    if not candidates:
+                        await interaction.followup.send(
+                            embed=_generate_player_error_embed(
+                                f"Aucun joueur actif n'a assez de place pour recevoir {qi.quantity}x '{qi.item.name}'. Les récompenses ne sont pas distribuées."
+                            ),
+                            ephemeral=False,
+                        )
+                        return
+                    recipient = random.choice(candidates)
 
-                recipient = random.choice(candidates)
                 has_added = await recipient.inventory.add(interaction.guild, recipient, qi.item, qi.quantity, quest=True)
                 if not has_added:
                     await interaction.followup.send(
