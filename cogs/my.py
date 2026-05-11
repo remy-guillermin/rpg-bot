@@ -97,7 +97,7 @@ class My(commands.Cog):
             for power in character.powers
         }
         embed = _generate_powers_embed(character, cooldowns=cooldowns)
-        view = PowersView(character)
+        view = PowersView(character, cooldowns=cooldowns)
         await interaction.followup.send(embed=embed, view=view)
 
     async def my_buffs(self, interaction: Interaction):

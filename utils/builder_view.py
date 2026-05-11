@@ -23,17 +23,46 @@ from utils.builder_embed import (
     _generate_player_error_embed
 )
 from utils.embeds.power import _generate_power_use_embed
+from utils.embeds.character import _generate_powers_embed, POWERS_PAGE_SIZE
 from utils.path import ASSETS_FOLDER
 from utils.utils import ITEMS_PER_PAGE, price_offer, STAT_MAP
 
 
 # --- Powers --------------------------------
 class PowersView(View):
-    def __init__(self, character, my_command: bool = True):
+    def __init__(self, character, my_command: bool = True, page: int = 0, cooldowns: dict | None = None):
         super().__init__(timeout=120)
-        for i, power in enumerate(sorted(character.powers, key=lambda p: p.name)):
-            button = PowerButton(power, index=i)
-            self.add_item(button)
+        self.character = character
+        self.my_command = my_command
+        self.cooldowns = cooldowns or {}
+        powers = sorted(character.powers, key=lambda p: p.name)
+        self.total_pages = max(1, math.ceil(len(powers) / POWERS_PAGE_SIZE))
+        self.page = max(0, min(page, self.total_pages - 1))
+        page_powers = powers[self.page * POWERS_PAGE_SIZE:(self.page + 1) * POWERS_PAGE_SIZE]
+
+        for i, power in enumerate(page_powers):
+            self.add_item(PowerButton(power, index=i))
+
+        if self.total_pages > 1:
+            if self.page > 0:
+                prev = discord.ui.Button(label="◀ Précédent", style=discord.ButtonStyle.primary, row=4)
+                prev.callback = self._prev_page
+                self.add_item(prev)
+            if self.page < self.total_pages - 1:
+                nxt = discord.ui.Button(label="Suivant ▶", style=discord.ButtonStyle.primary, row=4)
+                nxt.callback = self._next_page
+                self.add_item(nxt)
+
+    async def _prev_page(self, interaction: discord.Interaction):
+        await self._go_to(interaction, self.page - 1)
+
+    async def _next_page(self, interaction: discord.Interaction):
+        await self._go_to(interaction, self.page + 1)
+
+    async def _go_to(self, interaction: discord.Interaction, new_page: int):
+        new_view = PowersView(self.character, my_command=self.my_command, page=new_page, cooldowns=self.cooldowns)
+        new_embed = _generate_powers_embed(self.character, my_command=self.my_command, cooldowns=self.cooldowns, page=new_page)
+        await interaction.response.edit_message(embed=new_embed, view=new_view)
 
 
 class PowerButton(Button):

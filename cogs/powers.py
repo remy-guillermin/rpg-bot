@@ -49,28 +49,34 @@ class Powers(commands.Cog):
     @admin_only()
     async def power_list(self, interaction: Interaction):
         """Affiche la liste des pouvoirs disponibles."""
-        embed = discord.Embed(
-            title="Liste des pouvoirs", 
-            description="Voici les pouvoirs disponibles.", 
-            color=discord.Color.dark_magenta(),
-            timestamp=datetime.datetime.now()
-        )
-
         assigned_powers = {}
         for character in self.character_repository.characters.values():
             for power in character.powers:
                 assigned_powers.setdefault(power.name, []).append(character.name)
-        
-        powers = assigned_powers.copy()
 
+        powers = assigned_powers.copy()
         for power in self.power_repository.powers.values():
             if power.name not in assigned_powers:
                 powers.setdefault(power.name, [])
 
+        sorted_powers = sorted(powers.items())
 
-        for power, characters in sorted(powers.items()):
-            character_list = ", ".join(characters) if characters else "Aucun personnage"
-            embed.add_field(name=power, value=character_list, inline=True)
+        # Regroupe en chunks de 10 entrées par field (max 25 fields = 250 pouvoirs)
+        CHUNK = 10
+        chunks = [sorted_powers[i:i + CHUNK] for i in range(0, len(sorted_powers), CHUNK)]
+
+        embed = discord.Embed(
+            title=f"Liste des pouvoirs ({len(sorted_powers)})",
+            color=discord.Color.dark_magenta(),
+            timestamp=datetime.datetime.now()
+        )
+
+        for chunk in chunks:
+            lines = "\n".join(
+                f"**{name}** — {', '.join(chars) if chars else '*non assigné*'}"
+                for name, chars in chunk
+            )
+            embed.add_field(name="​", value=lines, inline=False)
 
         await interaction.response.send_message(embed=embed)
 

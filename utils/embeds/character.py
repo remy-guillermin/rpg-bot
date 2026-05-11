@@ -1,6 +1,7 @@
 import discord
 import datetime
 import locale
+import math
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -231,38 +232,31 @@ def _generate_inventory_embed(character: "Character", my_command: bool = True) -
     return embed
 
 
-def _generate_powers_embed(character: "Character", my_command: bool = True, cooldowns: dict[str, int] | None = None) -> discord.Embed:
-    """
-        Génère un embed Discord contenant les pouvoir d'un joueur.
+POWERS_PAGE_SIZE = 20
 
-    Parameters
-    ----------
-    character : Character
-        Le personnage dont les pouvoirs doivent être affichés.
-    my_command : bool, optional
-        Indique si la commande est utilisée pour afficher les pouvoirs de son propre personnage (True) ou pour afficher les pouvoirs d'un autre personnage (False). Par défaut à True.
+def _generate_powers_embed(character: "Character", my_command: bool = True, cooldowns: dict[str, int] | None = None, page: int = 0) -> discord.Embed:
+    powers = sorted(character.powers, key=lambda p: locale.strxfrm(p.name))
+    total_pages = max(1, math.ceil(len(powers) / POWERS_PAGE_SIZE))
+    page = max(0, min(page, total_pages - 1))
+    page_powers = powers[page * POWERS_PAGE_SIZE:(page + 1) * POWERS_PAGE_SIZE]
 
-    Returns
-    -------
-    discord.Embed
-        L'embed Discord contenant les pouvoirs du personnage.
-    """
-    embed = discord.Embed(
-        title="Mes pouvoirs" if my_command else f"Pouvoirs de {character.name}",
-        color=discord.Color.fuchsia(),
-        timestamp=datetime.datetime.now()
-    )
+    title = "Mes pouvoirs" if my_command else f"Pouvoirs de {character.name}"
+    if total_pages > 1:
+        title += f" — page {page + 1}/{total_pages}"
 
-    if character.powers:
-        for power in sorted(character.powers, key=lambda p: locale.strxfrm(p.name)):
-            description = power.description if power.description else "Aucune description disponible."
-            cd = cooldowns.get(power.name, 0) if cooldowns else 0
-            if cd > 0:
-                mot = "tour" if cd == 1 else "tours"
-                description += f"\n🔒 *Recharge : **{cd} {mot}** restant{'s' if cd > 1 else ''}*"
-            embed.add_field(name=f" ❈ {power.name}", value=description, inline=False)
-    else:
+    embed = discord.Embed(title=title, color=discord.Color.fuchsia(), timestamp=datetime.datetime.now())
+
+    if not powers:
         embed.add_field(name="Aucun pouvoir", value="Ce personnage n'a aucun pouvoir pour le moment.", inline=False)
+        return embed
+
+    for power in page_powers:
+        description = power.description if power.description else "Aucune description disponible."
+        cd = cooldowns.get(power.name, 0) if cooldowns else 0
+        if cd > 0:
+            mot = "tour" if cd == 1 else "tours"
+            description += f"\n🔒 *Recharge : **{cd} {mot}** restant{'s' if cd > 1 else ''}*"
+        embed.add_field(name=f" ❈ {power.name}", value=description, inline=False)
 
     return embed
 
