@@ -24,6 +24,7 @@ class Quest:
     condition_items: list[QuestItem]
     reward_xp: int
     reward_items: list[QuestItem]
+    reward_currency: int = 0
 
     def is_available(self, completed_quests: set[str], inventory: "Inventory") -> bool:
         if self.condition_quest and self.condition_quest not in completed_quests:
@@ -107,6 +108,7 @@ class NPCRepository:
                 condition_items=condition_items,
                 reward_xp=q["reward_xp"],
                 reward_items=reward_items,
+                reward_currency=q.get("reward_currency", 0),
             )
             self._quests[quest.quest_id] = quest
 

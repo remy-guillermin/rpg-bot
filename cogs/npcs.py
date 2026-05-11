@@ -23,11 +23,13 @@ from utils.autocomplete import (
     make_sale_id_autocomplete,
     make_accept_quest_autocomplete,
     make_active_quest_autocomplete,
+    make_location_quests_autocomplete,
 )
 from utils.admin import AdminGroup
 from utils.builder_embed import (
     _generate_npc_embed,
     _generate_quest_embed,
+    _generate_player_quest_info_embed,
     _generate_player_error_embed,
     _generate_trade_result_embed,
     _generate_npc_offer_embed,
@@ -107,7 +109,7 @@ class NPCCog(commands.Cog):
             )
             return
 
-        embed = _generate_quest_embed(quest, QuestStatus.ACTIVE)
+        embed = _generate_quest_embed(quest, QuestStatus.ACTIVE, hide_reward_items=True)
         await interaction.response.send_message(content="📜 Quête démarrée !", embed=embed)
 
 
@@ -221,6 +223,16 @@ class NPCCog(commands.Cog):
                 char.gain_experience(individual_xp)
                 self.bot.character_repository.update_character(char)
             rewards.append(f"{quest.reward_xp} XP → tous les joueurs actifs ({', '.join(active_players)})")
+
+        if quest.reward_currency and active_characters:
+            n = len(active_characters)
+            base = quest.reward_currency // n
+            remainder = quest.reward_currency % n
+            for i, char in enumerate(active_characters):
+                amount = base + (remainder if i == n - 1 else 0)
+                char.currency += amount
+                self.bot.character_repository.update_character(char)
+            rewards.append(f"{quest.reward_currency} 🪙 → tous les joueurs actifs ({', '.join(active_players)})")
 
         embed = _generate_quest_embed(quest, QuestStatus.COMPLETED)
         embed.add_field(
@@ -536,11 +548,24 @@ class NPCCog(commands.Cog):
 
         await interaction.response.send_message(embed=_generate_blacksmith_upgrade_embed(npc_name, source_item, dest_item, cost))
 
+    async def npc_info_quest(self, interaction: discord.Interaction, quest_id: str):
+        quest = self.npc_repo.get_quest(quest_id)
+        if not quest:
+            await interaction.response.send_message(
+                embed=_generate_player_error_embed(f"Quête `{quest_id}` introuvable."), ephemeral=True
+            )
+            return
+        embed = _generate_player_quest_info_embed(quest)
+        await interaction.response.send_message(embed=embed)
+
     async def autocomplete_accept_quest(self, interaction: discord.Interaction, current: str):
         return await make_accept_quest_autocomplete(self.npc_repo, self.quest_progress, self.bot)(interaction, current)
 
     async def autocomplete_active_quest(self, interaction: discord.Interaction, current: str):
         return await make_active_quest_autocomplete(self.npc_repo, self.quest_progress)(interaction, current)
+
+    async def autocomplete_location_quests(self, interaction: discord.Interaction, current: str):
+        return await make_location_quests_autocomplete(self.npc_repo, self.bot)(interaction, current)
 
     async def cog_load(self):
         fiche_cmd = app_commands.Command(
@@ -550,6 +575,14 @@ class NPCCog(commands.Cog):
         )
         fiche_cmd.autocomplete("nom")(self.autocomplete_npc)
         self.npc_group.add_command(fiche_cmd)
+
+        info_quest_cmd = app_commands.Command(
+            name="info-quest",
+            description="Affiche les informations d'une quête",
+            callback=self.npc_info_quest,
+        )
+        info_quest_cmd.autocomplete("quest_id")(self.autocomplete_location_quests)
+        self.npc_group.add_command(info_quest_cmd)
 
         accept_quest_cmd = app_commands.Command(
             name="accept-quest",

@@ -432,6 +432,7 @@ def load_quests(sheet_csv_url: str) -> list[dict]:
             "condition_items": _extract_ingredients(row.get("condition_items")),
             "reward_xp": _parse_int(row.get("reward_xp")),
             "reward_items": _extract_ingredients(row.get("reward_items") or ""),
+            "reward_currency": _parse_int(row.get("reward_currency")),
         } 
         quests.append(quest)
     

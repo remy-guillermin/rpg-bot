@@ -196,7 +196,7 @@ def _generate_trade_item_info_embed(item: "Item") -> discord.Embed:
     return embed
 
 
-def _generate_quest_embed(quest: "Quest", status: "QuestStatus | None" = None) -> discord.Embed:
+def _generate_quest_embed(quest: "Quest", status: "QuestStatus | None" = None, hide_reward_items: bool = False) -> discord.Embed:
     embed = discord.Embed(
         title=f"📜 {quest.title}",
         description=quest.description,
@@ -226,8 +226,36 @@ def _generate_quest_embed(quest: "Quest", status: "QuestStatus | None" = None) -
     if quest.reward_xp:
         rewards.append(f"{quest.reward_xp} XP")
     if quest.reward_items:
-        items_str = ", ".join(f"{qi.quantity}x {qi.item.name}" for qi in quest.reward_items)
-        rewards.append(items_str)
+        if hide_reward_items:
+            total = sum(qi.quantity for qi in quest.reward_items)
+            rewards.append(f"{total} objet{'s' if total > 1 else ''}")
+        else:
+            items_str = ", ".join(f"{qi.quantity}x {qi.item.name}" for qi in quest.reward_items)
+            rewards.append(items_str)
+    if quest.reward_currency:
+        rewards.append(f"{quest.reward_currency} 🪙")
+    if rewards:
+        embed.add_field(name="Récompenses", value=" · ".join(rewards), inline=False)
+
+    return embed
+
+
+def _generate_player_quest_info_embed(quest: "Quest") -> discord.Embed:
+    embed = discord.Embed(
+        title=f"📜 {quest.title}",
+        description=quest.description,
+        color=COLOR_QUEST,
+    )
+    embed.add_field(name="Donneur de quête", value=quest.npc_name, inline=True)
+
+    rewards = []
+    if quest.reward_xp:
+        rewards.append(f"{quest.reward_xp} XP")
+    if quest.reward_currency:
+        rewards.append(f"{quest.reward_currency} 🪙")
+    if quest.reward_items:
+        total = sum(qi.quantity for qi in quest.reward_items)
+        rewards.append(f"{total} objet{'s' if total > 1 else ''}")
     if rewards:
         embed.add_field(name="Récompenses", value=" · ".join(rewards), inline=False)
 

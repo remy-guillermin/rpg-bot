@@ -736,6 +736,28 @@ def make_active_quest_autocomplete(npc_repository, quest_progress):
     return active_quest_autocomplete
 
 
+def make_location_quests_autocomplete(npc_repository, bot):
+    """Autocomplete for all quests at the current location (regardless of status)."""
+    async def location_quests_autocomplete(
+        interaction: Interaction,
+        current: str
+    ) -> list[app_commands.Choice[str]]:
+        choices = []
+        if bot.location.city:
+            npcs = npc_repository.by_city(bot.location.city)
+        else:
+            npcs = npc_repository.by_realm_outside_city(bot.location.realm)
+        for npc in npcs:
+            for quest in npc.quests:
+                if _word_startswith(quest.title, current) or _word_startswith(quest.quest_id, current):
+                    choices.append(app_commands.Choice(
+                        name=f"{quest.title} ({quest.quest_id})",
+                        value=quest.quest_id,
+                    ))
+        return sorted(choices, key=lambda c: _accent_sort_key(c.name))[:25]
+    return location_quests_autocomplete
+
+
 # --- Tag Autocomplete ---
 
 def make_tag_autocomplete(item_repository):

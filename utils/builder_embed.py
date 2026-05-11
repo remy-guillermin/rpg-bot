@@ -64,6 +64,7 @@ from utils.embeds.lootbox import (
 from utils.embeds.npc import (
     _generate_npc_embed,
     _generate_quest_embed,
+    _generate_player_quest_info_embed,
     _generate_memory_fragment_embed,
     _generate_trade_result_embed,
     _generate_npc_offer_embed,
