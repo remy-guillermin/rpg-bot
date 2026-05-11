@@ -183,13 +183,13 @@ class DiceSession:
             outcomes = [r.get("outcome") for r in rolls if "outcome" in r]
             types = [r.get("type") for r in rolls if "type" in r]
 
-            faces = np.array([parse_dice(r.get("expression"))['dice'][0][1] for r in avg_rolls if "expression" in r])
+            faces = np.array([parse_dice(r.get("expression"))['dice'][0][1] for r in rolls if "expression" in r])
             coefs = 1 / (faces / 20)
-            modifiers = np.array([r.get("modifier", 0) for r in avg_rolls])
+            modifiers = np.array([r.get("modifier", 0) for r in rolls])
             corrected_modifiers = coefs * modifiers
-            base_totals = np.array([r.get("base_total", 0) for r in avg_rolls])
+            base_totals = np.array([r.get("base_total", 0) for r in rolls])
             corrected_base_totals = coefs * base_totals
-            totals = np.array([r.get("total", 0) for r in avg_rolls if "total" in r])
+            totals = np.array([r.get("total", 0) for r in rolls if "total" in r])
             corrected_totals = coefs * totals
 
             summary[c] = {

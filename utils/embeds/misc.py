@@ -9,6 +9,10 @@ from utils.variations import (
     MOST_ROLLS_FLAVOR,
     BEST_ROLLER_FLAVOR,
     WORST_ROLLER_FLAVOR,
+    MOST_GOOD_FLAVOR,
+    MOST_GOOD_NONE_FLAVOR,
+    MOST_BAD_FLAVOR,
+    MOST_BAD_NONE_FLAVOR,
     COMBAT_TITLES,
     CRIT_SUCCESS_FLAVOR,
     CRIT_SUCCESS_NONE_FLAVOR,
@@ -87,6 +91,8 @@ def _generate_session_summary_embed(stats: dict) -> discord.Embed:
 
     nat_success_name, nat_success_count   = stats['most_natural_success']
     crit_success_name, crit_success_count = stats['most_critical_success']
+    good_name, good_count                 = stats['most_good']
+    bad_name, bad_count                   = stats['most_bad']
     crit_fail_name, crit_fail_count       = stats['most_critical_fail']
     nat_fail_name, nat_fail_count         = stats['most_natural_fail']
 
@@ -132,6 +138,27 @@ def _generate_session_summary_embed(stats: dict) -> discord.Embed:
             crit_success_name, crit_success_count, "💥", "Maître du chaos chanceux",
             "Aucun critique positif. Séance difficile.",
             "A explosé ses jets avec style. Ou de la triche."
+        ),
+        inline=True
+    )
+
+    embed.add_field(name="\u200b", value="\u200b", inline=False)
+
+    embed.add_field(
+        name="🟢 Bon résultat",
+        value=outcome_line(
+            good_name, good_count, "🟢", "Régulier au-dessus",
+            MOST_GOOD_NONE_FLAVOR,
+            random.choice(MOST_GOOD_FLAVOR)
+        ),
+        inline=True
+    )
+    embed.add_field(
+        name="🟠 Mauvais résultat",
+        value=outcome_line(
+            bad_name, bad_count, "🟠", "Régulier en dessous",
+            MOST_BAD_NONE_FLAVOR,
+            random.choice(MOST_BAD_FLAVOR)
         ),
         inline=True
     )

@@ -818,7 +818,7 @@ def clean_dice_summary(summary: dict[str, dict]) -> dict[str, tuple]:
     summary_cleaned['most_rolls'] = (most_rolls, active[most_rolls]['total_rolls'])
 
     # Most of each outcome
-    for outcome in ('natural_success', 'critical_success', 'critical_fail', 'natural_fail'):
+    for outcome in ('natural_success', 'critical_success', 'good', 'bad', 'critical_fail', 'natural_fail'):
         candidates = {name: data['outcomes'].get(outcome, 0) for name, data in active.items()}
         top_count = max(candidates.values())
         if top_count == 0:

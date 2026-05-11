@@ -408,6 +408,20 @@ MOST_ROLLS_FLAVOR = [
     "Les dés sont son langage maternel.",
 ]
 
+MOST_GOOD_FLAVOR = [
+    "Régulièrement au-dessus de la moyenne. Suspect.",
+    "Les bons jets ne sont pas un accident. Ou si ?",
+    "La fiabilité incarnée. Presque ennuyeuse.",
+]
+MOST_GOOD_NONE_FLAVOR = "Personne n'a brillé. Séance ordinaire."
+
+MOST_BAD_FLAVOR = [
+    "Une constance dans la médiocrité rarement égalée.",
+    "Les mauvais jets arrivent à tout le monde. Lui plus souvent.",
+    "Régulièrement en dessous. Remarquable, dans le mauvais sens.",
+]
+MOST_BAD_NONE_FLAVOR = "Personne n'a particulièrement raté. Les dés ont été cléments."
+
 COMBAT_TITLES = [
     "⚔️ Chroniques du Champ de Bataille",
     "⚔️ Le Grand Registre des Carnages",
