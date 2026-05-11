@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 
 from utils.path import ROLL_DIR
-from utils.utils import parse_dice, roll_dice, get_outcome, get_base_outcome, get_craft_outcome
+from utils.utils import parse_dice, roll_dice, get_outcome, get_craft_outcome
 
 
 class DiceSession:
@@ -103,7 +103,14 @@ class DiceSession:
             total = faces
             outcome = "critical_success"
         else:
-            outcome = "normal"
+            bad_threshold  = faces * 0.30
+            good_threshold = faces * 0.70
+            if natural <= bad_threshold:
+                outcome = "bad"
+            elif natural >= good_threshold:
+                outcome = "good"
+            else:
+                outcome = "normal"
 
         entry = {
             "timestamp": datetime.now().isoformat(),

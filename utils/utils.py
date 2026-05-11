@@ -731,32 +731,25 @@ def roll_dice(expression: str) -> dict:
 
 
 def get_outcome(roll_result: dict) -> str:
-    natural_roll = roll_result["results"][0]["rolls"][0]
+    natural_roll = roll_result["base_total"]
     faces = int(roll_result["results"][0]["expression"].split("d")[1])
-    modifier = roll_result["modifier"]
+    total = roll_result["total"]
 
-    if natural_roll == 1 and modifier > 0:
-        return "saved_fail"
-    elif natural_roll == 1:
-        return "critical_fail"
-    elif natural_roll == faces and modifier < 0:
-        return "cancelled_success"
-    elif natural_roll == faces:
-        return "critical_success"
-    else:
-        return "normal"
-
-
-def get_base_outcome(roll_result: dict) -> str:
-    natural_roll = roll_result["results"][0]["rolls"][0]
-    faces = int(roll_result["results"][0]["expression"].split("d")[1])
+    bad_threshold  = faces * 0.30
+    good_threshold = faces * 0.70
 
     if natural_roll == 1:
-        return "critical_fail"
-    elif natural_roll == faces:
-        return "critical_success"
-    else:
-        return "normal"
+        return "natural_fail"
+    if natural_roll == faces:
+        return "natural_success"
+
+    raw_tier   = "bad"  if natural_roll <= bad_threshold  else ("good" if natural_roll >= good_threshold  else "normal")
+    total_tier = "bad"  if total        <= bad_threshold  else ("good" if total        >= good_threshold  else "normal")
+
+    if raw_tier != total_tier:
+        return "critical_fail" if total_tier == "bad" else "critical_success"
+
+    return raw_tier
 
 
 def get_craft_outcome(roll_result: dict, has_failure: bool = False, has_success: bool = False) -> str:
