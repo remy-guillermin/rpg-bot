@@ -169,17 +169,20 @@ class DiceSession:
     def summary(self, characters: list[str]) -> dict:
         summary = {}
         for c in characters:
-            rolls = self.get_character_history(c)
+            all_rolls = self.get_character_history(c)
+            # Exclut entièrement les lancers d'Attaque — ils ont leur propre commande
+            rolls = [r for r in all_rolls if not (r.get("type") == "stat" and r.get("stat", "").lower() == "attaque")]
+
             outcomes = [r.get("outcome") for r in rolls if "outcome" in r]
             types = [r.get("type") for r in rolls if "type" in r]
-            faces = np.array([parse_dice(r.get("expression"))['dice'][0][1] for r in rolls if "expression" in r])
-            coefs = 1 / (faces/20)
-            corrected_faces = coefs * faces
-            modifiers = np.array([r.get("modifier", 0) for r in rolls])
+
+            faces = np.array([parse_dice(r.get("expression"))['dice'][0][1] for r in avg_rolls if "expression" in r])
+            coefs = 1 / (faces / 20)
+            modifiers = np.array([r.get("modifier", 0) for r in avg_rolls])
             corrected_modifiers = coefs * modifiers
-            base_totals = np.array([r.get("base_total", 0) for r in rolls])
+            base_totals = np.array([r.get("base_total", 0) for r in avg_rolls])
             corrected_base_totals = coefs * base_totals
-            totals = np.array([r.get("total", 0) for r in rolls if "total" in r])
+            totals = np.array([r.get("total", 0) for r in avg_rolls if "total" in r])
             corrected_totals = coefs * totals
 
             summary[c] = {
@@ -192,6 +195,31 @@ class DiceSession:
                 "average_total": np.round(sum(corrected_totals) / len(corrected_totals) if len(corrected_totals) != 0 else 0, 2),
             }
 
+        return summary
+
+    def combat_summary(self, characters: list[str]) -> dict:
+        summary = {}
+        for c in characters:
+            rolls = [
+                r for r in self.get_character_history(c)
+                if r.get("type") == "stat" and r.get("stat", "").lower() == "attaque"
+            ]
+            if not rolls:
+                continue
+
+            outcomes = [r.get("outcome") for r in rolls]
+            hits = [r for r in rolls if r.get("outcome") != "natural_fail"]
+            totals_hits = [r.get("total", 0) for r in hits]
+            totals_all  = [r.get("total", 0) for r in rolls]
+            base_totals = [r.get("base_total", 0) for r in rolls]
+
+            summary[c] = {
+                "total_rolls": len(rolls),
+                "outcomes": {o: outcomes.count(o) for o in set(outcomes)},
+                "average_damage": round(sum(totals_hits) / len(totals_hits), 2) if totals_hits else 0,
+                "total_damage": sum(totals_all),
+                "average_base_total": round(sum(base_totals) / len(base_totals), 2) if base_totals else 0,
+            }
         return summary
 
     def _save(self) -> None:

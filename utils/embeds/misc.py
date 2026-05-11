@@ -9,6 +9,17 @@ from utils.variations import (
     MOST_ROLLS_FLAVOR,
     BEST_ROLLER_FLAVOR,
     WORST_ROLLER_FLAVOR,
+    COMBAT_TITLES,
+    CRIT_SUCCESS_FLAVOR,
+    CRIT_SUCCESS_NONE_FLAVOR,
+    NATURAL_SUCCESS_FLAVOR,
+    NATURAL_SUCCESS_NONE_FLAVOR,
+    NATURAL_FAIL_FLAVOR,
+    NATURAL_FAIL_NONE_FLAVOR,
+    BEST_DAMAGE_FLAVOR,
+    WORST_DAMAGE_FLAVOR,
+    MOST_DAMAGE_FLAVOR,
+    LEAST_DAMAGE_FLAVOR,
 )
 
 from utils.utils import (
@@ -147,6 +158,76 @@ def _generate_session_summary_embed(stats: dict) -> discord.Embed:
     )
 
     embed.set_footer(text="Que vos prochains jets soient... légèrement meilleurs.")
+    return embed
+
+
+def _generate_combat_summary_embed(stats: dict) -> discord.Embed:
+    embed = discord.Embed(
+        title=random.choice(COMBAT_TITLES),
+        description="*Le sang a coulé. Les dés ont parlé. Voici qui s'est illustré.*",
+        color=discord.Color.dark_red(),
+        timestamp=datetime.datetime.now(),
+    )
+
+    def ranking_field(ranking: list[tuple], some_flavor: list[str], none_flavor: str):
+        if not ranking:
+            return f"*{none_flavor}*"
+        top_name, top_count = ranking[0]
+        lines = "\n".join(f"{i+1}. **{name}** — `{count}`" for i, (name, count) in enumerate(ranking))
+        return f"{lines}\n*{random.choice(some_flavor)}*"
+
+    embed.add_field(
+        name="💥 Succès critiques",
+        value=ranking_field(stats.get("critical_success_ranking", []), CRIT_SUCCESS_FLAVOR, CRIT_SUCCESS_NONE_FLAVOR),
+        inline=True,
+    )
+    embed.add_field(
+        name="✨ Succès naturels (20)",
+        value=ranking_field(stats.get("natural_success_ranking", []), NATURAL_SUCCESS_FLAVOR, NATURAL_SUCCESS_NONE_FLAVOR),
+        inline=True,
+    )
+    embed.add_field(
+        name="🕳️ Échecs naturels (1)",
+        value=ranking_field(stats.get("natural_fail_ranking", []), NATURAL_FAIL_FLAVOR, NATURAL_FAIL_NONE_FLAVOR),
+        inline=True,
+    )
+
+    embed.add_field(name="​", value="​", inline=False)
+
+    best_name,  best_avg  = stats.get("best_damage",  (None, 0))
+    worst_name, worst_avg = stats.get("worst_damage", (None, 0))
+    most_name,  most_tot  = stats.get("most_damage",  (None, 0))
+    least_name, least_tot = stats.get("least_damage", (None, 0))
+
+    if best_name:
+        embed.add_field(
+            name="⚔️ Lame la plus affûtée",
+            value=f"**{best_name}** — moy. `{best_avg:.1f}` dégâts/coup\n*{random.choice(BEST_DAMAGE_FLAVOR)}*",
+            inline=True,
+        )
+    if worst_name:
+        embed.add_field(
+            name="🪨 Lame la plus émoussée",
+            value=f"**{worst_name}** — moy. `{worst_avg:.1f}` dégâts/coup\n*{random.choice(WORST_DAMAGE_FLAVOR)}*",
+            inline=True,
+        )
+
+    embed.add_field(name="​", value="​", inline=False)
+
+    if most_name:
+        embed.add_field(
+            name="🩸 Bain de sang",
+            value=f"**{most_name}** — `{most_tot}` au total\n*{random.choice(MOST_DAMAGE_FLAVOR)}*",
+            inline=True,
+        )
+    if least_name and least_name != most_name:
+        embed.add_field(
+            name="🕊️ Main légère",
+            value=f"**{least_name}** — `{least_tot}` au total\n*{random.choice(LEAST_DAMAGE_FLAVOR)}*",
+            inline=True,
+        )
+
+    embed.set_footer(text="Les dégâts moyens excluent les échecs naturels (attaque ratée).")
     return embed
 
 

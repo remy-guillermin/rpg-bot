@@ -44,6 +44,17 @@ class Powers(commands.Cog):
     async def character_autocomplete(self, interaction: Interaction, current: str):
         return await make_character_autocomplete(self.character_repository)(interaction, current)
 
+    async def character_power_autocomplete(self, interaction: Interaction, current: str):
+        character_name = interaction.namespace.character_name
+        character = self.character_repository.get_character_by_name(character_name)
+        if not character or not character.powers:
+            return []
+        return sorted([
+            app_commands.Choice(name=p.name, value=p.name)
+            for p in character.powers
+            if not current or p.name.lower().startswith(current.lower())
+        ], key=lambda c: c.name)[:25]
+
     # ── Commandes ────────────────────────────────────────────────────
     @app_commands.command(name="powers", description="Affiche la liste des pouvoirs disponibles.")
     @admin_only()
@@ -263,6 +274,46 @@ class Powers(commands.Cog):
             f"✅ Pouvoir **{power.name}** assigné à **{character_name}**.", ephemeral=True
         )
 
+        channel = interaction.client.get_channel(character.player_channel_id)
+        if channel is None and interaction.guild is not None:
+            channel = interaction.guild.get_channel(character.player_channel_id)
+        if channel is not None:
+            embed = _generate_power_embed(power)
+            embed.title = f"✨ Nouveau pouvoir : {power.name}"
+            await channel.send(embed=embed)
+
+    @app_commands.describe(
+        character_name="Personnage auquel retirer le pouvoir.",
+        power_name="Pouvoir à retirer."
+    )
+    async def remove_power(self, interaction: Interaction, character_name: str, power_name: str):
+        """Retire un pouvoir à un personnage."""
+        character = self.character_repository.get_character_by_name(character_name)
+        if not character:
+            await interaction.response.send_message(embed=_generate_player_error_embed(f"Personnage '{character_name}' introuvable."), ephemeral=True)
+            return
+
+        power = next((p for p in character.powers if p.name == power_name), None)
+        if not power:
+            await interaction.response.send_message(embed=_generate_player_error_embed(f"**{character_name}** ne possède pas le pouvoir **{power_name}**."), ephemeral=True)
+            return
+
+        character.powers.remove(power)
+        with get_connection() as conn:
+            conn.execute(
+                "DELETE FROM power_assignments WHERE character_name = ? AND power_name = ?",
+                (character.name, power.name),
+            )
+        self.character_repository.characters[character.name] = character
+
+        await interaction.response.send_message(f"✅ Pouvoir **{power.name}** retiré à **{character_name}**.", ephemeral=True)
+
+        channel = interaction.client.get_channel(character.player_channel_id)
+        if channel is None and interaction.guild is not None:
+            channel = interaction.guild.get_channel(character.player_channel_id)
+        if channel is not None:
+            await channel.send(f"🚫 Le pouvoir **{power.name}** t'a été retiré.")
+
     async def cog_load(self):
         # --- info ---
         info_cmd = app_commands.Command(
@@ -292,6 +343,17 @@ class Powers(commands.Cog):
         give_power_cmd.autocomplete("character_name")(self.character_autocomplete)
         give_power_cmd.autocomplete("power_name")(self.all_powers_autocomplete)
         self.bot.tree.add_command(give_power_cmd)
+
+        # --- remove-power ---
+        remove_power_cmd = app_commands.Command(
+            name="remove-power",
+            description="Retire un pouvoir à un personnage.",
+            callback=self.remove_power,
+        )
+        remove_power_cmd.default_permissions = discord.Permissions(administrator=True)
+        remove_power_cmd.autocomplete("character_name")(self.character_autocomplete)
+        remove_power_cmd.autocomplete("power_name")(self.character_power_autocomplete)
+        self.bot.tree.add_command(remove_power_cmd)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Powers(bot))

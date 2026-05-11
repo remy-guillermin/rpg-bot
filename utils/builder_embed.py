@@ -77,6 +77,7 @@ from utils.embeds.npc import (
 from utils.embeds.misc import (
     _generate_basic_dice_embed,
     _generate_session_summary_embed,
+    _generate_combat_summary_embed,
     _generate_player_error_embed,
     _generate_help_embed,
     _generate_city_arrival_embed,

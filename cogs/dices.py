@@ -7,9 +7,10 @@ from utils.builder_embed import (
     _generate_stat_dice_embed,
     _generate_player_error_embed,
     _generate_session_summary_embed,
+    _generate_combat_summary_embed,
 )
 from utils.autocomplete import make_stat_dice_autocomplete
-from utils.utils import _get_stat_bonus, clean_dice_summary
+from utils.utils import _get_stat_bonus, clean_dice_summary, clean_combat_summary
 from utils.admin import admin_only
 from utils.path import GM_NAMES
 
@@ -83,6 +84,19 @@ class Dices(commands.Cog):
         
         embed = _generate_session_summary_embed(summary)
         await interaction.response.send_message(embed=embed, ephemeral=False)
+
+
+    @app_commands.command(name="combatsummary", description="Affiche le bilan des lancers d'Attaque de la session.")
+    @admin_only()
+    async def combat_summary(self, interaction: Interaction):
+        names = [p for p in self.bot.character_repository.get_all_character_names() if p not in GM_NAMES]
+        raw = self.bot.dice_session.combat_summary(names)
+        if not raw:
+            await interaction.response.send_message("Aucun lancer d'Attaque enregistré pour cette session.", ephemeral=True)
+            return
+        stats = clean_combat_summary(raw)
+        embed = _generate_combat_summary_embed(stats)
+        await interaction.response.send_message(embed=embed)
 
 
 async def setup(bot: commands.Bot):

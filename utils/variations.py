@@ -390,3 +390,54 @@ MOST_ROLLS_FLAVOR = [
     "A passé plus de temps à lancer qu'à réfléchir.",
     "Les dés sont son langage maternel.",
 ]
+
+COMBAT_TITLES = [
+    "⚔️ Chroniques du Champ de Bataille",
+    "⚔️ Le Grand Registre des Carnages",
+    "⚔️ Rapport de l'Armurier Royal",
+]
+
+CRIT_SUCCESS_FLAVOR = [
+    "A décidé que les règles de la physique ne s'appliquent pas à lui.",
+    "Les ennemis ont eu le temps de voir leur vie défiler. Brièvement.",
+    "Quelqu'un mange bien ce soir.",
+]
+CRIT_SUCCESS_NONE_FLAVOR = "Aucun succès critique. Séance décevante."
+
+NATURAL_SUCCESS_FLAVOR = [
+    "Touché par la grâce divine. Ou par la triche divine.",
+    "Un 20 naturel. Les dieux ont voté.",
+    "Ce jet restera dans les annales. Les bonnes.",
+]
+NATURAL_SUCCESS_NONE_FLAVOR = "Aucun 20 naturel. Les dieux boudent."
+
+NATURAL_FAIL_FLAVOR = [
+    "A réussi à rater quelque chose d'impossible à rater.",
+    "Le sol a eu l'air d'une bonne cible, visiblement.",
+    "Un talent inné pour le désastre.",
+]
+NATURAL_FAIL_NONE_FLAVOR = "Aucun échec naturel. Les dés sont cléments aujourd'hui."
+
+BEST_DAMAGE_FLAVOR = [
+    "Chaque coup compte. Surtout les siens.",
+    "L'armurier ennemi est au chômage technique.",
+    "Les adversaires préfèrent ne pas le croiser dans une ruelle sombre.",
+]
+
+WORST_DAMAGE_FLAVOR = [
+    "Frappe fort... dans le vide.",
+    "Les ennemis ont eu peur. Puis ont regardé les dégâts. Puis ont ri.",
+    "Techniquement, c'est du dégât.",
+]
+
+MOST_DAMAGE_FLAVOR = [
+    "Les chiffres ne mentent pas. Lui, il dévaste.",
+    "A converti beaucoup d'ennemis à la religion de la retraite anticipée.",
+    "Le comptable des ennemis a rendu son tablier.",
+]
+
+LEAST_DAMAGE_FLAVOR = [
+    "A infligé moins de dégâts que le buffet d'après-séance.",
+    "Les ennemis ont apprécié la douceur de son contact.",
+    "Efficace. Dans un sens très particulier du terme.",
+]

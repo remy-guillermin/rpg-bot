@@ -782,6 +782,30 @@ def get_craft_outcome(roll_result: dict, has_failure: bool = False, has_success:
         return "normal" if total < faces * 0.75 else "success"
 
 
+def clean_combat_summary(summary: dict[str, dict]) -> dict:
+    if not summary:
+        return {}
+
+    def top(key: str):
+        candidates = {name: data["outcomes"].get(key, 0) for name, data in summary.items()}
+        ranked = sorted(candidates.items(), key=lambda x: x[1], reverse=True)
+        return [(name, count) for name, count in ranked if count > 0]
+
+    best_dmg  = max(summary, key=lambda n: summary[n]["average_damage"])
+    worst_dmg = min(summary, key=lambda n: summary[n]["average_damage"])
+    most_dmg  = max(summary, key=lambda n: summary[n]["total_damage"])
+    least_dmg = min(summary, key=lambda n: summary[n]["total_damage"])
+
+    return {
+        "critical_success_ranking": top("critical_success"),
+        "natural_success_ranking":  top("natural_success"),
+        "natural_fail_ranking":     top("natural_fail"),
+        "best_damage":  (best_dmg,  summary[best_dmg]["average_damage"]),
+        "worst_damage": (worst_dmg, summary[worst_dmg]["average_damage"]),
+        "most_damage":  (most_dmg,  summary[most_dmg]["total_damage"]),
+        "least_damage": (least_dmg, summary[least_dmg]["total_damage"]),
+    }
+
 def clean_dice_summary(summary: dict[str, dict]) -> dict[str, tuple]:
     """Clean the summary by replacing keys with their cleaned versions."""
     summary_cleaned = {}
