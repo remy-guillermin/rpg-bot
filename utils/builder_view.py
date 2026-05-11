@@ -20,7 +20,8 @@ from utils.builder_embed import (
     _generate_item_embed,
     _generate_player_counter_offer_embed,
     _generate_sale_counter_offer_embed,
-    _generate_player_error_embed
+    _generate_player_error_embed,
+    _generate_new_item_notification_embed,
 )
 from utils.embeds.power import _generate_power_use_embed
 from utils.embeds.character import _generate_powers_embed, POWERS_PAGE_SIZE
@@ -447,6 +448,18 @@ class SaleCounterOfferView(discord.ui.View):
         await btn_interaction.response.send_message(
             content=f"✅ **{self.character.name}** achète {received} pour **{self.counter_price} 🪙**.",
         )
+
+        player_channel = btn_interaction.client.get_channel(self.character.player_channel_id)
+        if player_channel is None and btn_interaction.guild is not None:
+            player_channel = btn_interaction.guild.get_channel(self.character.player_channel_id)
+        if player_channel is not None:
+            for entry in self.trade.offered_items:
+                embed, file = _generate_new_item_notification_embed(entry.item, entry.quantity, origin="npc_purchase", npc_name=self.npc_name)
+                view = NewItemNotificationView([(entry.item, entry.quantity)])
+                if file is not None:
+                    await player_channel.send(embed=embed, file=file, view=view)
+                else:
+                    await player_channel.send(embed=embed, view=view)
 
     @discord.ui.button(label="Refuser", style=discord.ButtonStyle.danger)
     async def decline(self, btn_interaction: discord.Interaction, button: discord.ui.Button):
