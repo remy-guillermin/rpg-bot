@@ -37,7 +37,7 @@ from utils.builder_embed import (
     _generate_new_item_notification_embed,
     _generate_sale_counter_offer_embed,
 )
-from utils.builder_view import OfferView, SaleCounterOfferView, NewItemNotificationView
+from utils.builder_view import OfferView, SaleCounterOfferView, NewItemNotificationView, TradeItemView
 from utils.utils import UPGRADE_EQUIPMENT, RUNES_COST
 
 class NPCCog(commands.Cog):
@@ -67,13 +67,20 @@ class NPCCog(commands.Cog):
             return
 
         completed = self.quest_progress.get_completed()
-        
 
         city_npcs = self.npc_repo.by_city(self.bot.location.city)
 
         embed = _generate_npc_embed(npc, completed, self.bot.character_repository.runes_rarity_discovered)
 
-        await interaction.response.send_message(embed=embed)
+        seen = {}
+        for trade in npc.trades:
+            for entry in trade.offered_items:
+                if entry.item.name not in seen:
+                    seen[entry.item.name] = entry.item
+        trade_items = list(seen.values())
+
+        view = TradeItemView(trade_items) if trade_items else None
+        await interaction.response.send_message(embed=embed, view=view)
 
     @app_commands.describe(quest_id="ID de la quête à démarrer")
     async def npc_accept_quest(self, interaction: discord.Interaction, quest_id: str):

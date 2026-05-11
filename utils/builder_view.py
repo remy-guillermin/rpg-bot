@@ -24,6 +24,7 @@ from utils.builder_embed import (
 )
 from utils.embeds.power import _generate_power_use_embed
 from utils.embeds.character import _generate_powers_embed, POWERS_PAGE_SIZE
+from utils.embeds.npc import _generate_trade_item_info_embed
 from utils.path import ASSETS_FOLDER
 from utils.utils import ITEMS_PER_PAGE, price_offer, STAT_MAP
 
@@ -588,3 +589,27 @@ class CounterOfferModal(discord.ui.Modal, title="Contre-offre"):
             )
             await interaction.response.send_message(embed=embed, view=None)
 
+
+# --- Trade item info buttons --------------------------------
+
+class TradeItemButton(discord.ui.Button):
+    def __init__(self, item: Item, row: int):
+        super().__init__(
+            label=item.name[:80],
+            style=discord.ButtonStyle.secondary,
+            row=row,
+        )
+        self.item = item
+
+    async def callback(self, interaction: discord.Interaction):
+        self.disabled = True
+        embed = _generate_trade_item_info_embed(self.item)
+        await interaction.response.send_message(embed=embed)
+        await interaction.message.edit(view=self.view)
+
+
+class TradeItemView(discord.ui.View):
+    def __init__(self, items: list[Item]):
+        super().__init__(timeout=300)
+        for i, item in enumerate(items[:25]):
+            self.add_item(TradeItemButton(item, row=i // 5))

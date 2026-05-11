@@ -12,7 +12,9 @@ from utils.utils import (
     COLOR_QUEST,
     COLOR_SUCCESS,
     STATS_CLEAN,
+    SLOTS_CLEAN,
     RARITY_CLEAN_ITEM,
+    COLOR_BY_RARITY_ITEM,
     RUNES_COST,
     UPGRADE_EQUIPMENT,
     roles_display,
@@ -158,6 +160,38 @@ def _generate_npc_embed(npc: "NPC", completed: set[str] | None = None, runes_rar
                 inline=False,
             )
         
+
+    return embed
+
+
+def _generate_trade_item_info_embed(item: "Item") -> discord.Embed:
+    color = COLOR_BY_RARITY_ITEM.get(item.rarity, discord.Color.light_gray())
+    embed = discord.Embed(
+        title=item.name,
+        description=item.description or "Aucune description disponible.",
+        color=color,
+    )
+    embed.add_field(name="🏷️ Rareté", value=RARITY_CLEAN_ITEM.get(item.rarity, item.rarity), inline=True)
+
+    if item.tags:
+        embed.add_field(name="🔖 Tags", value=", ".join(item.tags), inline=True)
+
+    if item.equippable:
+        slot_clean = SLOTS_CLEAN.get(item.equippable_slot, item.equippable_slot)
+        embed.add_field(name="🛡️ Équipable", value=slot_clean, inline=True)
+        if item.equipped_bonus:
+            bonus_display = "\n".join(f"- {STATS_CLEAN.get(stat, stat)}: {bonus:+d}" for stat, bonus in item.equipped_bonus.items())
+            embed.add_field(name="⚔️ Bonus équipé", value=bonus_display, inline=True)
+
+    if item.useable:
+        embed.add_field(name="🔨 Utilisable", value="Oui", inline=True)
+        numeric_effects = {k: v for k, v in item.use_effects.items() if not isinstance(v, bool)}
+        if numeric_effects:
+            use_effect_display = "".join(
+                f"- {stat}: {'+' if v[0] >= 0 else ''}{v[0]}{f' | {v[1]} tours' if v[1] > 0 else ''}\n"
+                for stat, v in numeric_effects.items()
+            )
+            embed.add_field(name="✨ Effet à l'utilisation", value=use_effect_display, inline=True)
 
     return embed
 
