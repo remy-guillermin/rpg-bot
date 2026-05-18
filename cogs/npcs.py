@@ -81,8 +81,10 @@ class NPCCog(commands.Cog):
                     seen[entry.item.name] = entry.item
         trade_items = list(seen.values())
 
-        view = TradeItemView(trade_items) if trade_items else None
-        await interaction.response.send_message(embed=embed, view=view)
+        if trade_items:
+            await interaction.response.send_message(embed=embed, view=TradeItemView(trade_items))
+        else:
+            await interaction.response.send_message(embed=embed)
 
     @app_commands.describe(quest_id="ID de la quête à démarrer")
     async def npc_accept_quest(self, interaction: discord.Interaction, quest_id: str):

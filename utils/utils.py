@@ -5,6 +5,8 @@ import re
 import random
 import numpy as np
 
+from utils.path import GM_NAMES
+
 logger = logging.getLogger(__name__)
 
 # ------------------- CONSTANTS  ------------------
@@ -884,7 +886,7 @@ async def update_bot_status(bot) -> None:
             chars = []
             for member in channel.members:
                 char = bot.character_repository.get_character_by_user_id(member.id)
-                if char and char.name != "Rémy":
+                if char and char.name not in GM_NAMES:
                     chars.append(char.name)
             if chars:
                 parts.append(f"{channel.name} : {', '.join(chars)}")
